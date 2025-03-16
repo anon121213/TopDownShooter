@@ -1,5 +1,6 @@
 ﻿using System;
 using _Scripts.Gameplay.Enemies.BehaviourTree;
+using _Scripts.Gameplay.health;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -8,6 +9,7 @@ namespace _Scripts.Gameplay.Enemies.Base
   public abstract class Enemy : MonoBehaviour, IDisposable
   {
     [field: SerializeField] public NavMeshAgent NavMeshAgent { get; private set; }
+    [field: SerializeField] public Health Health { get; private set; }
     protected EnemyAI EnemyAI { get; private set; }
     public bool Enabled { get; private set; }
 

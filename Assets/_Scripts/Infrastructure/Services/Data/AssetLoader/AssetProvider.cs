@@ -26,7 +26,7 @@ namespace _Scripts.Infrastructure.Services.Data.AssetLoader
       return null;
     }
 
-    public async UniTask<TObject> LoadAssetAsync<TObject>(AssetReference path) where TObject : Component
+    public async UniTask<TObject> LoadAssetAsync<TObject>(AssetReference path) where TObject : Component 
     {
       var handle = Addressables.LoadAssetAsync<GameObject>(path);
       await handle.Task;

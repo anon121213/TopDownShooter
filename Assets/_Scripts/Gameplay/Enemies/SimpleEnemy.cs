@@ -17,6 +17,7 @@ namespace _Scripts.Gameplay.Enemies
     public float Damage { get; private set; }
     public float AttackRadius { get; private set; }
     public float AttackDelay { get; private set; }
+    public float StartHealth { get; private set; }
     public IEnemyMover Mover { get; private set; }
 
     public void Construct(EnemyConfig config, IEnemyMover enemyMover)
@@ -28,6 +29,20 @@ namespace _Scripts.Gameplay.Enemies
       Damage = config.Damage;
       AttackDelay = config.AttackDelay;
       AttackRadius = config.AttackRadius;
+      StartHealth = config.StartHealth;
+    }
+
+    public void Initialize()
+    {
+      Health.OnHealthOver += Died;
+      Health.Construct(StartHealth);
+    }
+
+    private void Died()
+    {
+      DisableEnemy();
+      Health.OnHealthOver -= Died;
+      Destroy(gameObject);
     }
 
     public void SetPatrolPoints(List<Transform> patrolPoints) => 
@@ -39,6 +54,11 @@ namespace _Scripts.Gameplay.Enemies
         return;
       
       EnemyAI?.Execute();
+    }
+
+    private void OnDisable()
+    {
+      Health.OnHealthOver -= Died;
     }
   }
 }

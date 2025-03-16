@@ -58,6 +58,7 @@ namespace _Scripts.Gameplay.Player.Services
     {
       _inputService.OnStartMove -= StartMove;
       _inputService.OnStopMove -= StopMove;
+      StopMove();
     }
   }
 

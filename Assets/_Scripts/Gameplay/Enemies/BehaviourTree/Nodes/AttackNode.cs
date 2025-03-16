@@ -1,4 +1,5 @@
-﻿using _Scripts.Gameplay.Enemies.Base;
+﻿using System;
+using _Scripts.Gameplay.Enemies.Base;
 using _Scripts.Gameplay.Enemies.BehaviourTree.Nodes.Base;
 using _Scripts.Gameplay.health;
 using UnityEngine;
@@ -20,14 +21,15 @@ namespace _Scripts.Gameplay.Enemies.BehaviourTree.Nodes
       if (count > 0)
       {
         for (int i = 0; i < count; i++)
-          if (_results[i].TryGetComponent(out IDamageable damageable))
+          if (_results[i].TryGetComponent(out IDamageable damageable) && _results[i].transform != enemy.transform)
           {
-            Debug.Log("attackk");
             damageable.TakeDamage(_attackeableEnemy.Damage);
             return NodeStatus.Success;
           }
       }
 
+      for (int i = 0; i < count; i++)
+        _results[i] = null;
       return NodeStatus.Failure;
     }
   }

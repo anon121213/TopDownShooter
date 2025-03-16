@@ -24,6 +24,7 @@ namespace _Scripts.Gameplay.Player.Factory
     private readonly IHealthPresenter _healthPresenter;
     private readonly IPlayerAttacker _playerAttacker;
     private readonly IPlayerAttackController _attackController;
+    private readonly PlayerInventory _playerInventory;
 
     private PlayerConfig _config;
     
@@ -35,7 +36,8 @@ namespace _Scripts.Gameplay.Player.Factory
       IPlayerHealth playerHealth,
       IHealthPresenter healthPresenter,
       IPlayerAttacker playerAttacker,
-      IPlayerAttackController attackController)
+      IPlayerAttackController attackController,
+      PlayerInventory playerInventory)
     {
       _staticDataProvider = staticDataProvider;
       _assetProvider = assetProvider;
@@ -46,6 +48,7 @@ namespace _Scripts.Gameplay.Player.Factory
       _healthPresenter = healthPresenter;
       _playerAttacker = playerAttacker;
       _attackController = attackController;
+      _playerInventory = playerInventory;
     }
       
     public async UniTask Warmup()
@@ -62,6 +65,7 @@ namespace _Scripts.Gameplay.Player.Factory
       CreateMover(player);
       CreateHealth(player);
       CreateAttacker();
+      CreateInventory();
       return player;
     }
 
@@ -81,6 +85,11 @@ namespace _Scripts.Gameplay.Player.Factory
     {
       _playerServices.AddService(_playerAttacker);
       _playerServices.AddService(_attackController);
+    }
+
+    private void CreateInventory()
+    {
+      _playerServices.AddService(_playerInventory);
     }
   }
 

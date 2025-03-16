@@ -9,11 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 75865d8bc9084f8498e0312a74cdfedd, type: 3}
-  m_Name: WeaponConfig 1
+  m_Script: {fileID: 11500000, guid: 5834b5087d578d24c926ce20cd31e6d6, type: 3}
+  m_Name: Enemies_ContentUpdateGroupSchema
   m_EditorClassIdentifier: 
-  <ItemData>k__BackingField:
-    <Type>k__BackingField: 2
-    <ReloadDelay>k__BackingField: 2
-  <Damage>k__BackingField: 50
-  <AttackerType>k__BackingField: 2
+  m_Group: {fileID: 11400000, guid: 591997d9cb46b604a9b08a6f056e49e5, type: 2}
+  m_StaticContent: 0

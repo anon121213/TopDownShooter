@@ -17,7 +17,6 @@ namespace _Scripts.Gameplay.health
     public void TakeDamage(float damage)
     {
       _health.Value = Mathf.Clamp(HealthPoints.Value - damage, 0, int.MaxValue);
-
       if (HealthPoints.Value <= 0) 
         OnHealthOver?.Invoke();
     }

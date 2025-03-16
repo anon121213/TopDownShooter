@@ -34,7 +34,7 @@ namespace _Scripts.Gameplay.Player.Services
 
       _attackDisposable = Observable.Interval(TimeSpan.FromSeconds(
           _playerAttacker.CurrentWeapon.Value.ItemData.ReloadDelay))
-        .Subscribe(_ => _playerAttacker.TryAttack()); 
+        .Subscribe(async _ => await _playerAttacker.TryAttack()); 
     }
     
     public void Disable()

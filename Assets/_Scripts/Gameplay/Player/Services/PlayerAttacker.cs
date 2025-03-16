@@ -1,5 +1,6 @@
 ﻿using System;
 using _Scripts.Gameplay.Items.Weapons;
+using Cysharp.Threading.Tasks;
 using UniRx;
 
 namespace _Scripts.Gameplay.Player.Services
@@ -22,17 +23,18 @@ namespace _Scripts.Gameplay.Player.Services
         _currentWeapon.Value = weapon;
     }
 
-    public bool TryAttack()
+    public async UniTask<bool> TryAttack()
     {
       if (!_isCanAttack)
         return false;
-      
-      if (!_currentWeapon.Value.TryAttack()) 
+
+      if (!await _currentWeapon.Value.TryAttack()) 
         return false;
-      
+
       OnAttack?.Invoke();
       return true;
     }
+
 
     public void Disable() => 
       _isCanAttack = false;

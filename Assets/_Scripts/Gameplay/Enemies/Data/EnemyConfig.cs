@@ -13,5 +13,6 @@ namespace _Scripts.Gameplay.Enemies.Data
     [field: SerializeField] public float Damage { get; private set; }
     [field: SerializeField] public float AttackRadius { get; private set; }
     [field: SerializeField] public float AttackDelay { get; private set; }
+    [field: SerializeField] public float StartHealth { get; private set; }
   }
 }

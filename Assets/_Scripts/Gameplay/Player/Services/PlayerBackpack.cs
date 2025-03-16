@@ -8,8 +8,9 @@ namespace _Scripts.Gameplay.Player.Services
 {
   public class PlayerBackpack : IPlayerBackpack
   {
-    private readonly List<IItem> Items = new();
-
+    private readonly List<IItem> _items = new();
+    public IReadOnlyList<IItem> Items => _items;
+    
     public void AddItem(IItem item, int count)
     {
       if (item == null)
@@ -22,7 +23,7 @@ namespace _Scripts.Gameplay.Player.Services
       }
 
       item.ItemData.Count.Value += count;
-      Items.Add(item);
+      _items.Add(item);
     }
 
     public bool FindItem(ItemType type, out IItem findedItem)
@@ -47,6 +48,7 @@ namespace _Scripts.Gameplay.Player.Services
 
   public interface IPlayerBackpack
   {
+    IReadOnlyList<IItem> Items { get; }
     void AddItem(IItem item, int count);
     bool FindItem(ItemType type, out IItem findedItem);
     void RemoveItem(ItemType type, int count);

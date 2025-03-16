@@ -1,7 +1,9 @@
-﻿namespace _Scripts.Gameplay.Items.Weapons.Attackables
+﻿using Cysharp.Threading.Tasks;
+
+namespace _Scripts.Gameplay.Items.Weapons.Attackables
 {
   public interface IAttackable
   {
-    void Attack();
+    UniTask Attack();
   }
 }

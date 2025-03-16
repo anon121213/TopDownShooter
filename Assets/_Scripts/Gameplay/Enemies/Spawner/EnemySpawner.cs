@@ -27,6 +27,7 @@ namespace _Scripts.Gameplay.Enemies.Spawner
         SimpleEnemy enemy = await _enemyFactory.CreateSimpleEnemy(data.spawnPoint.position, Quaternion.identity);
                 
         enemy.SetPatrolPoints(data.patrolPoints);
+        enemy.Initialize();
         _enemies.Add(enemy);
       }
       return _enemies;

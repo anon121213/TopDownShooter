@@ -2,17 +2,23 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Pool;
+using VContainer;
+using VContainer.Unity;
 
 namespace _Scripts.Infrastructure.Services.Pool
 {
   public class ObjectPool : IObjectPool
   {
     private readonly Dictionary<GameObject, ObjectPool<GameObject>> _pooledObjects = new();
+    private readonly IObjectResolver _resolver;
+
+    public ObjectPool(IObjectResolver resolver) => 
+      _resolver = resolver;
 
     public T GetGameObject<T>(T prefab, Vector3 position, Quaternion rotation) where T : MonoBehaviour
     {
       if (_pooledObjects.Keys.Contains(prefab.gameObject) == false) 
-        RegisterPrefabInternal(prefab.gameObject, 3, null);
+        RegisterPrefabInternal(prefab.gameObject, position, rotation, 3, null);
 
       var gameObject = _pooledObjects[prefab.gameObject].Get();
 
@@ -20,13 +26,14 @@ namespace _Scripts.Infrastructure.Services.Pool
       noTransform.position = position;
       noTransform.rotation = rotation;
       
+      gameObject.SetActive(true);
       return gameObject.GetComponent<T>();
     }
     
     public T GetGameObject<T>(T prefab, Vector3 position, Quaternion rotation, Transform root) where T : MonoBehaviour
     {
       if (_pooledObjects.Keys.Contains(prefab.gameObject) == false) 
-        RegisterPrefabInternal(prefab.gameObject, 3, root);
+        RegisterPrefabInternal(prefab.gameObject, position, rotation,3, root);
 
       var gameObject = _pooledObjects[prefab.gameObject].Get();
 
@@ -34,13 +41,14 @@ namespace _Scripts.Infrastructure.Services.Pool
       noTransform.position = position;
       noTransform.rotation = rotation;
       
+      gameObject.SetActive(true);
       return gameObject.GetComponent<T>();
     }
 
     public GameObject GetGameObject(GameObject prefab, Vector3 position, Quaternion rotation)
     {
       if (_pooledObjects.Keys.Contains(prefab.gameObject) == false) 
-        RegisterPrefabInternal(prefab.gameObject, 3, null);
+        RegisterPrefabInternal(prefab.gameObject, position, rotation,3, null);
 
       var gameObject = _pooledObjects[prefab.gameObject].Get();
 
@@ -63,11 +71,11 @@ namespace _Scripts.Infrastructure.Services.Pool
       _pooledObjects[mPrefab].Release(tGameObject);
     }
 
-    void RegisterPrefabInternal(GameObject prefab, int prewarmCount, Transform root)
+    void RegisterPrefabInternal(GameObject prefab, Vector3 position, Quaternion rotation, int prewarmCount, Transform root)
     {
       GameObject CreateFunc()
       {
-        var instance = Object.Instantiate(prefab, root);
+        var instance = _resolver.Instantiate(prefab, position, rotation, root);
         return instance;
       }
 

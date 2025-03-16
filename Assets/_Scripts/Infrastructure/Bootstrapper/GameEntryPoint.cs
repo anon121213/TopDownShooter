@@ -5,10 +5,10 @@ using _Scripts.Gameplay.Items.Weapons.Factory;
 using _Scripts.Gameplay.Player;
 using _Scripts.Gameplay.Player.Factory;
 using _Scripts.Gameplay.Player.Services;
+using _Scripts.Gameplay.Player.Spawner;
 using _Scripts.Gameplay.PlayerCamera.Factory;
 using _Scripts.Infrastructure.Services.Data.AssetLoader;
 using _Scripts.Infrastructure.Services.Warmup;
-using UnityEngine;
 using VContainer.Unity;
 
 namespace _Scripts.Infrastructure.Bootstrapper
@@ -23,6 +23,7 @@ namespace _Scripts.Infrastructure.Bootstrapper
     private readonly IWeaponFactory _weaponFactory;
     private readonly IPlayerAttacker _playerAttacker;
     private readonly IPlayerBackpack _playerBackpack;
+    private readonly IPlayerSpawner _playerSpawner;
 
     public GameEntryPoint(IAssetProvider assetProvider,
       IWarmupService warmupService,
@@ -31,7 +32,8 @@ namespace _Scripts.Infrastructure.Bootstrapper
       IEnemySpawner enemySpawner,
       IWeaponFactory weaponFactory,
       IPlayerAttacker playerAttacker,
-      IPlayerBackpack playerBackpack)
+      IPlayerBackpack playerBackpack,
+      IPlayerSpawner playerSpawner)
     {
       _assetProvider = assetProvider;
       _warmupService = warmupService;
@@ -41,19 +43,21 @@ namespace _Scripts.Infrastructure.Bootstrapper
       _weaponFactory = weaponFactory;
       _playerAttacker = playerAttacker;
       _playerBackpack = playerBackpack;
+      _playerSpawner = playerSpawner;
     }
 
     public async void Initialize()
     {
       await _warmupService.Warmup();
-      
-      Player player = await _playerFactory.CreatePlayer();
-      _cameraFactory.CreateCamera(player.transform);
+
+      var player = await _playerSpawner.SpawnPlayer();
       await _enemySpawner.CreateSimpleEnemiesOnSpawnPoints();
 
-      var weapon = _weaponFactory.CreateWeapon(ItemType.Pistol);
-      _playerAttacker.SwitchWeapon(weapon);
-      _playerBackpack.AddItem(weapon, 1);
+      var pistol = _weaponFactory.CreateWeapon(ItemType.Pistol, player.transform);
+      var grenade = _weaponFactory.CreateWeapon(ItemType.Grenade, player.transform);
+      _playerAttacker.SwitchWeapon(pistol);
+      _playerBackpack.AddItem(pistol, 1);
+      _playerBackpack.AddItem(grenade, 3);
       
       player.Initialize();
       _assetProvider.Cleanup();

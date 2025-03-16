@@ -24,3 +24,4 @@ MonoBehaviour:
   <Damage>k__BackingField: 20
   <AttackRadius>k__BackingField: 1
   <AttackDelay>k__BackingField: 1
+  <StartHealth>k__BackingField: 100

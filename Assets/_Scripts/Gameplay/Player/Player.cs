@@ -27,7 +27,8 @@ namespace _Scripts.Gameplay.Player
 
     private void Die()
     {
-      Debug.LogError("You Died");
+      _playerServices.DisableServices();
+      Debug.LogError("YouDied");
     }
 
     private void OnDisable()

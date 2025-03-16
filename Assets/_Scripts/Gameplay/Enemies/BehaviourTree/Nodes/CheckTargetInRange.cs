@@ -1,4 +1,5 @@
-﻿using _Scripts.Gameplay.Enemies.Base;
+﻿using System;
+using _Scripts.Gameplay.Enemies.Base;
 using _Scripts.Gameplay.Enemies.BehaviourTree.Nodes.Base;
 using UnityEngine;
 
@@ -28,6 +29,9 @@ namespace _Scripts.Gameplay.Enemies.BehaviourTree.Nodes
         }
       }
 
+      for (int i = 0; i < count; i++)
+        _results[i] = null;
+      
       return NodeStatus.Failure;
     }
   }
