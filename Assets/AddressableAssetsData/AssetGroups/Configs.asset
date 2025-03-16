@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Configs
+  m_EditorClassIdentifier: 
+  m_GroupName: Configs
+  m_GUID: bc532f90939e8e44bb47b6d437fe783e
+  m_SerializeEntries:
+  - m_GUID: 0a7311a06ec056344a5601c6bde06945
+    m_Address: Assets/_Data/Player/CameraConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Config
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7410bf2b195144c4bb3ecddd8781eb94
+    m_Address: Assets/_Data/Weapons/AllWeaponsConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Config
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a863289fcbcd3294ab3890c5410408f5
+    m_Address: Assets/_Data/Player/PlayerConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Config
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d38dd7db4504d0e42b58cf10dc6ed4b3
+    m_Address: Assets/_Data/Enemy/EnemyConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Config
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 8adf4347f5252f7429618402fbd643e8, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 5178216e38d9e424eb8312900d618e8e, type: 2}
+    - {fileID: 11400000, guid: 694b2a9581c0afb4785d3a321d5bbeee, type: 2}
