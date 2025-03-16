@@ -16,6 +16,8 @@ namespace _Scripts.Gameplay.Items.Weapons.Attackables
     private readonly GrenadeProjectileConfig _grenadeProjectileConfig;
     private readonly IPlayerBackpack _playerBackpack;
     private readonly IPlayerAttacker _playerAttacker;
+    private readonly float _findTargetRadius;
+    private readonly float _spawnProjectileOffset;
     private readonly Collider[] _results = new Collider[30];
 
     public GrenadeAttacker(IProjectileSpawner projectileSpawner,
@@ -23,7 +25,9 @@ namespace _Scripts.Gameplay.Items.Weapons.Attackables
       Transform owner,
       GrenadeProjectileConfig grenadeProjectileConfig,
       IPlayerBackpack playerBackpack,
-      IPlayerAttacker playerAttacker)
+      IPlayerAttacker playerAttacker,
+      float findTargetRadius,
+      float spawnProjectileOffset)
     {
       _projectileSpawner = projectileSpawner;
       _projectile = projectile;
@@ -31,6 +35,8 @@ namespace _Scripts.Gameplay.Items.Weapons.Attackables
       _grenadeProjectileConfig = grenadeProjectileConfig;
       _playerBackpack = playerBackpack;
       _playerAttacker = playerAttacker;
+      _findTargetRadius = findTargetRadius;
+      _spawnProjectileOffset = spawnProjectileOffset;
     }
 
     public async UniTask Attack()
@@ -38,7 +44,7 @@ namespace _Scripts.Gameplay.Items.Weapons.Attackables
       if (_playerAttacker.CurrentWeapon.Value.ItemData.Count.Value <= 0)
         return;
       
-      int count = Physics.OverlapSphereNonAlloc(_owner.position, 30, _results);
+      int count = Physics.OverlapSphereNonAlloc(_owner.position, _findTargetRadius, _results);
       if (count == 0)
         return;
 
@@ -70,9 +76,7 @@ namespace _Scripts.Gameplay.Items.Weapons.Attackables
         direction = _owner.forward;
 
       Quaternion rotation = Quaternion.LookRotation(direction);
-
-      float spawnOffset = 1.5f;
-      Vector3 spawnPosition = _owner.position + direction * spawnOffset;
+      Vector3 spawnPosition = _owner.position + direction * _spawnProjectileOffset;
 
       await _projectileSpawner.CreateProjectile(_projectile, spawnPosition, rotation, 
         _grenadeProjectileConfig);

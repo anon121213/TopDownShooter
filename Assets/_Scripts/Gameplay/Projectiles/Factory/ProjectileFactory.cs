@@ -10,11 +10,7 @@ namespace _Scripts.Gameplay.Projectiles.Factory
     public ProjectileFactory(IObjectPool objectPool) => 
       _objectPool = objectPool;
 
-    public Projectile CreateProjectile(
-      Projectile prefab, Vector3 at, Quaternion direction)
-    {
-      Projectile projectile = _objectPool.GetGameObject(prefab, at, direction);
-      return projectile;
-    }
+    public Projectile CreateProjectile(Projectile prefab, Vector3 at, Quaternion direction) => 
+      _objectPool.GetGameObject(prefab, at, direction);
   }
 }

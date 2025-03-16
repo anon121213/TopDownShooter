@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using _Scripts.Gameplay.Projectiles.Data;
 using _Scripts.Gameplay.Projectiles.Factory;
 using _Scripts.Infrastructure.Services.Data.AssetLoader;
@@ -9,7 +10,7 @@ using UnityEngine.AddressableAssets;
 
 namespace _Scripts.Gameplay.Projectiles.Spawner
 {
-  public class ProjectileSpawner : IProjectileSpawner
+  public class ProjectileSpawner : IProjectileSpawner, IDisposable
   {
     private readonly Dictionary<Projectile, Projectile> _projectiles = new();
     private readonly IObjectPool _objectPool;
@@ -42,6 +43,12 @@ namespace _Scripts.Gameplay.Projectiles.Spawner
       projectile.OnCollide -= ReturnToPool;
       _objectPool.ReturnGameObject(projectile.gameObject, _projectiles[projectile]);
       _projectiles.Remove(projectile);
+    }
+
+    public void Dispose()
+    {
+      foreach (var projectile in _projectiles) 
+        projectile.Key.OnCollide -= ReturnToPool;
     }
   }
 }

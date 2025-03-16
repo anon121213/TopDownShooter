@@ -12,12 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
   m_Name: Enemies
   m_EditorClassIdentifier: 
-  m_GroupName: Packed Assets
-  m_GUID: bed31e7f6daa45a49a0b5d39c3fe3bff
-  m_SerializeEntries: []
+  m_GroupName: Enemies
+  m_GUID: 2dbdb4301138b5b4cb5854dbd33cbf89
+  m_SerializeEntries:
+  - m_GUID: 55ca948b9ef780743bb8e7e0480e716c
+    m_Address: Assets/Prefabs/Enemy/Enemy.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 8adf4347f5252f7429618402fbd643e8, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: caab2e5924ceb3145ac2ee2fd2763ccb, type: 2}
-    - {fileID: 11400000, guid: aabbb0e2ef5da214889e40f157b6a838, type: 2}
+    - {fileID: 11400000, guid: 6cd94e44699ee544bad260b69ae8fac5, type: 2}
+    - {fileID: 11400000, guid: 751414acc19cbda4092516037204f55e, type: 2}

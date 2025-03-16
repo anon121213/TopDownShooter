@@ -1,5 +1,4 @@
-﻿using System;
-using _Scripts.Gameplay.Enemies.Base;
+﻿using _Scripts.Gameplay.Enemies.Base;
 using _Scripts.Gameplay.Enemies.BehaviourTree.Nodes.Base;
 using _Scripts.Gameplay.health;
 using UnityEngine;

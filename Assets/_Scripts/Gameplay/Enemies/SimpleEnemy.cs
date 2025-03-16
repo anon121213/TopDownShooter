@@ -1,13 +1,18 @@
 ﻿using System.Collections.Generic;
+using _Scripts.Gameplay.Collectables.Data;
+using _Scripts.Gameplay.Collectables.Spawner;
 using _Scripts.Gameplay.Enemies.Base;
 using _Scripts.Gameplay.Enemies.Data;
 using _Scripts.Gameplay.Enemies.Services;
 using UnityEngine;
+using VContainer;
 
 namespace _Scripts.Gameplay.Enemies
 {
   public class SimpleEnemy : Enemy, IMoveToPlayerEnemy, IPointMoveableEnemy, IAttackeableEnemy
   {
+    private ICollectableSpawner _collectableSpawner;
+    
     public List<Transform> PatrolPoints { get; private set; } = new();
     public int CurrentPatrolIndex { get; set; }
     public Transform Target { get; set; }
@@ -20,6 +25,12 @@ namespace _Scripts.Gameplay.Enemies
     public float StartHealth { get; private set; }
     public IEnemyMover Mover { get; private set; }
 
+    [Inject]
+    private void Inject(ICollectableSpawner collectableSpawner)
+    {
+      _collectableSpawner = collectableSpawner;
+    }
+    
     public void Construct(EnemyConfig config, IEnemyMover enemyMover)
     {
       CheckTargetRadius = config.CheckTargetRadius;
@@ -43,6 +54,7 @@ namespace _Scripts.Gameplay.Enemies
       DisableEnemy();
       Health.OnHealthOver -= Died;
       Destroy(gameObject);
+      _collectableSpawner.SpawnCollectable(CollectableType.Coin, transform.position, Quaternion.identity);
     }
 
     public void SetPatrolPoints(List<Transform> patrolPoints) => 

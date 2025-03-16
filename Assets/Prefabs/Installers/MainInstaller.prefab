@@ -154,4 +154,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3559c64e80c4a6aa6572204056108ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _isGameInstaller: 0

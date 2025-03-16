@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Collectables
+  m_EditorClassIdentifier: 
+  m_GroupName: Collectables
+  m_GUID: 45d1f9e14e9a2db498789c42f0624866
+  m_SerializeEntries:
+  - m_GUID: fd754a8abfe6c02468cd877837cb780f
+    m_Address: Assets/Prefabs/Collectables/Cylinder.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 8adf4347f5252f7429618402fbd643e8, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 4e3779b78a72c1a41bbaef5bb1f0388a, type: 2}
+    - {fileID: 11400000, guid: b17b76f2ad6897b4e8ff85180f349dfe, type: 2}

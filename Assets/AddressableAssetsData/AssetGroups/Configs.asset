@@ -21,6 +21,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Config
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5aebdb49acfc7074794ff12b343cd9e0
+    m_Address: Assets/_Data/Collectables/AllCollectablesConfig.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Config
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7410bf2b195144c4bb3ecddd8781eb94
     m_Address: Assets/_Data/Weapons/AllWeaponsConfig.asset
     m_ReadOnly: 0

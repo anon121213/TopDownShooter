@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using _Scripts.Gameplay.Collectables.Factory;
 using _Scripts.Gameplay.Enemies.Factory;
 using _Scripts.Gameplay.Items.Weapons.Factory;
 using _Scripts.Gameplay.Player.Factory;
@@ -16,13 +17,15 @@ namespace _Scripts.Infrastructure.Services.Warmup
       IPlayerFactory playerFactory,
       IEnemyFactory enemyFactory,
       ICameraFactory cameraFactory,
-      IWeaponFactory weaponFactory)
+      IWeaponFactory weaponFactory,
+      ICollectableFactory collectableFactory)
     {
       _warmupables.Add(staticDataProvider);
       _warmupables.Add(playerFactory);
       _warmupables.Add(cameraFactory);
       _warmupables.Add(enemyFactory);
       _warmupables.Add(weaponFactory);
+      _warmupables.Add(collectableFactory);
     }
 
     public async UniTask Warmup()

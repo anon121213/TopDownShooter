@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <ItemData>k__BackingField:
     <Type>k__BackingField: 1
-    <ReloadDelay>k__BackingField: 1
-  <Damage>k__BackingField: 20
+    <ReloadDelay>k__BackingField: 0.3
   <AttackerType>k__BackingField: 1
+  <FindTargetRadius>k__BackingField: 20
+  <SpawnProjectileOffset>k__BackingField: 1.5
   <ProjectileConfig>k__BackingField: {fileID: 11400000, guid: 9cedeac099ae62a41b365494b556eb7c, type: 2}

@@ -50,7 +50,6 @@ namespace _Scripts.Gameplay.Player.Services
       if (newWeapon == null)
         return; 
 
-      Debug.Log(newWeapon.ItemData.Type);
       _playerAttacker.SwitchWeapon(newWeapon);
     }
 

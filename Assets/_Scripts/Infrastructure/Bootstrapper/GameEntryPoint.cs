@@ -1,4 +1,5 @@
-﻿using _Scripts.Gameplay.Enemies.Factory;
+﻿using _Scripts.Gameplay.Collectables.Spawner;
+using _Scripts.Gameplay.Enemies.Factory;
 using _Scripts.Gameplay.Enemies.Spawner;
 using _Scripts.Gameplay.Items.Base;
 using _Scripts.Gameplay.Items.Weapons.Factory;
@@ -24,6 +25,7 @@ namespace _Scripts.Infrastructure.Bootstrapper
     private readonly IPlayerAttacker _playerAttacker;
     private readonly IPlayerBackpack _playerBackpack;
     private readonly IPlayerSpawner _playerSpawner;
+    private readonly ICollectableSpawner _collectableSpawner;
 
     public GameEntryPoint(IAssetProvider assetProvider,
       IWarmupService warmupService,
@@ -33,7 +35,8 @@ namespace _Scripts.Infrastructure.Bootstrapper
       IWeaponFactory weaponFactory,
       IPlayerAttacker playerAttacker,
       IPlayerBackpack playerBackpack,
-      IPlayerSpawner playerSpawner)
+      IPlayerSpawner playerSpawner,
+      ICollectableSpawner collectableSpawner)
     {
       _assetProvider = assetProvider;
       _warmupService = warmupService;
@@ -44,6 +47,7 @@ namespace _Scripts.Infrastructure.Bootstrapper
       _playerAttacker = playerAttacker;
       _playerBackpack = playerBackpack;
       _playerSpawner = playerSpawner;
+      _collectableSpawner = collectableSpawner;
     }
 
     public async void Initialize()
@@ -60,6 +64,7 @@ namespace _Scripts.Infrastructure.Bootstrapper
       _playerBackpack.AddItem(grenade, 3);
       
       player.Initialize();
+      _collectableSpawner.Initialize();
       _assetProvider.Cleanup();
     }
   }

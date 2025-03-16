@@ -7,6 +7,8 @@ namespace _Scripts.Gameplay.Items.Data
   public class WeaponConfig : ItemConfig
   {
     [field: SerializeField] public AttackerType AttackerType { get; private set; }
+    [field: SerializeField] public float FindTargetRadius { get; private set; }
+    [field: SerializeField] public float SpawnProjectileOffset { get; private set; }
     [field: SerializeField] public ProjectileConfig ProjectileConfig { get; private set; }
   }
 

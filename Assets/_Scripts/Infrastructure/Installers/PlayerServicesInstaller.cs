@@ -21,6 +21,7 @@ namespace _Scripts.Infrastructure.Installers
       builder.Register<IPlayerAttacker, PlayerAttacker>(Lifetime.Singleton);
       builder.Register<IPlayerAttackController, PlayerAttackController>(Lifetime.Singleton);
       builder.Register<PlayerInventory>(Lifetime.Singleton);
+      builder.Register<IPlayerCollecter, PlayerCollecter>(Lifetime.Singleton);
     }
   }
 }

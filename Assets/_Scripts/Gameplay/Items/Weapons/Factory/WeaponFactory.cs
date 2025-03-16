@@ -42,17 +42,21 @@ namespace _Scripts.Gameplay.Items.Weapons.Factory
       return new Weapon(config, GetAttacker(config.AttackerType, owner, config));
     }
 
-    private IAttackable GetAttacker(AttackerType attackerType, Transform owner, WeaponConfig weaponConfig)
+    private IAttackable GetAttacker(AttackerType attackerType,
+      Transform owner,
+      WeaponConfig weaponConfig)
     {
       switch (attackerType)
       {
         case AttackerType.Shooter:
           return new ShootAttacker(_projectileSpawner, weaponConfig.ProjectileConfig.Prefab, owner,
-            (ShootProjectileConfig)weaponConfig.ProjectileConfig);
-        
+            (ShootProjectileConfig)weaponConfig.ProjectileConfig, weaponConfig.FindTargetRadius,
+            weaponConfig.SpawnProjectileOffset);
+
         case AttackerType.Grenade:
           return new GrenadeAttacker(_projectileSpawner, weaponConfig.ProjectileConfig.Prefab, owner,
-            (GrenadeProjectileConfig)weaponConfig.ProjectileConfig, _playerBackpack, _playerAttacker);
+            (GrenadeProjectileConfig)weaponConfig.ProjectileConfig, _playerBackpack,
+            _playerAttacker, weaponConfig.FindTargetRadius, weaponConfig.SpawnProjectileOffset);
       }
 
       throw new Exception($"Attacker of type {attackerType} does not exist");
