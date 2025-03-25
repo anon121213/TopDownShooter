@@ -19,6 +19,7 @@ MonoBehaviour:
     m_SubObjectType: 
     m_EditorAssetChanged: 0
   <CheckTargetRadius>k__BackingField: 6
+  <CheckTargetDelay>k__BackingField: 0.5
   <WaitPatrolTime>k__BackingField: 2.5
   <Speed>k__BackingField: 3
   <Damage>k__BackingField: 20

@@ -14,7 +14,7 @@ namespace _Scripts.Infrastructure.Installers
     {
       builder.Register<ISceneLoader, SceneLoader>(Lifetime.Singleton);
       builder.Register<IAssetProvider, AssetProvider>(Lifetime.Singleton);
-      builder.Register<IStaticDataProvider, StaticDataProvider>(Lifetime.Singleton).As<IWarmupable>();;
+      builder.Register<IStaticDataProvider, StaticDataProvider>(Lifetime.Singleton).As<IWarmupable>();
       builder.Register<IWarmupService, WarmupService>(Lifetime.Singleton);
       builder.Register<IInputService, InputService>(Lifetime.Singleton);
       builder.Register<IObjectPool, ObjectPool>(Lifetime.Singleton);

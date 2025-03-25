@@ -8,6 +8,7 @@ namespace _Scripts.Gameplay.Enemies.Data
   {
     [field: SerializeField] public AssetReferenceGameObject Prefab { get; private set; }
     [field: SerializeField] public float CheckTargetRadius { get; private set; }
+    [field: SerializeField] public float CheckTargetDelay { get; private set; }
     [field: SerializeField] public float WaitPatrolTime { get; private set; }
     [field: SerializeField] public float Speed { get; private set; }
     [field: SerializeField] public float Damage { get; private set; }

@@ -17,6 +17,7 @@ namespace _Scripts.Gameplay.Enemies
     public int CurrentPatrolIndex { get; set; }
     public Transform Target { get; set; }
     public float CheckTargetRadius { get; private set; }
+    public float CheckTargetDelay { get; private set; }
     public float Speed { get; private set; }
     public float WaitTime { get; private set; }
     public float Damage { get; private set; }
@@ -34,6 +35,7 @@ namespace _Scripts.Gameplay.Enemies
     public void Construct(EnemyConfig config, IEnemyMover enemyMover)
     {
       CheckTargetRadius = config.CheckTargetRadius;
+      CheckTargetDelay = config.CheckTargetDelay;
       Speed = config.Speed;
       WaitTime = config.WaitPatrolTime;
       Mover = enemyMover;

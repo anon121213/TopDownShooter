@@ -3,5 +3,6 @@
   public interface IPatrolEnemy : ITargetableEnemy
   {
     float CheckTargetRadius { get; } 
+    float CheckTargetDelay { get; } 
   }
 }

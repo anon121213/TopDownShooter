@@ -56,6 +56,7 @@ namespace _Scripts.Gameplay.Enemies.Factory
       attackSequence.AddChild(new AttackDelayNode(enemy));
 
       var chaseSequence = new SequenceNode();
+      chaseSequence.AddChild(new CheckTargetInRangeDelayNode(enemy));
       chaseSequence.AddChild(new CheckTargetInRange(enemy));
       chaseSequence.AddChild(new MoveToPlayer(enemy));
 
@@ -72,7 +73,6 @@ namespace _Scripts.Gameplay.Enemies.Factory
 
       return enemyAI;
     }
-
   }
 
   public interface IEnemyFactory : IWarmupable
