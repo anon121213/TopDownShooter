@@ -12,12 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: baa8828d63b2490796895386cd282fd5, type: 3}
   m_Name: CameraConfig
   m_EditorClassIdentifier: 
-  <Prefab>k__BackingField:
-    m_AssetGUID: 167e8f16f8ae25a44b21a224da25e78f
-    m_SubObjectName: 
-    m_SubObjectGUID: 
-    m_SubObjectType: 
-    m_EditorAssetChanged: 0
+  <Prefab>k__BackingField: {fileID: 699060814840022813, guid: 167e8f16f8ae25a44b21a224da25e78f, type: 3}
   <Position>k__BackingField: {x: 0, y: 14, z: 0}
   <Rotation>k__BackingField: {x: 45, y: 0, z: 0}
   <Offset>k__BackingField: {x: 0, y: 24, z: -24}

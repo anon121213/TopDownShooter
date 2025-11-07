@@ -1,5 +1,5 @@
 ﻿using System;
-using _Scripts.Infrastructure.Services.Player;
+using _Scripts.Gameplay.Player.Services.Base;
 using UniRx;
 
 namespace _Scripts.Gameplay.Player.Services
@@ -34,7 +34,7 @@ namespace _Scripts.Gameplay.Player.Services
 
       _attackDisposable = Observable.Interval(TimeSpan.FromSeconds(
           _playerAttacker.CurrentWeapon.Value.ItemData.ReloadDelay))
-        .Subscribe(async _ => await _playerAttacker.TryAttack()); 
+        .Subscribe(_ => _playerAttacker.TryAttack()); 
     }
     
     public void Disable()

@@ -1,17 +1,16 @@
 using _Scripts.Gameplay.health;
 using _Scripts.Gameplay.Player.Services;
+using _Scripts.Gameplay.Projectiles;
 using _Scripts.Gameplay.Projectiles.Data;
 using _Scripts.Gameplay.Projectiles.Spawner;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 
 namespace _Scripts.Gameplay.Items.Weapons.Attackables
 {
   public class GrenadeAttacker : IAttackable
   {
     private readonly IProjectileSpawner _projectileSpawner;
-    private readonly AssetReferenceGameObject _projectile;
+    private readonly Projectile _projectile;
     private readonly Transform _owner;
     private readonly GrenadeProjectileConfig _grenadeProjectileConfig;
     private readonly IPlayerBackpack _playerBackpack;
@@ -21,7 +20,7 @@ namespace _Scripts.Gameplay.Items.Weapons.Attackables
     private readonly Collider[] _results = new Collider[30];
 
     public GrenadeAttacker(IProjectileSpawner projectileSpawner,
-      AssetReferenceGameObject projectile,
+      Projectile projectile,
       Transform owner,
       GrenadeProjectileConfig grenadeProjectileConfig,
       IPlayerBackpack playerBackpack,
@@ -39,7 +38,7 @@ namespace _Scripts.Gameplay.Items.Weapons.Attackables
       _spawnProjectileOffset = spawnProjectileOffset;
     }
 
-    public async UniTask Attack()
+    public void Attack()
     {
       if (_playerAttacker.CurrentWeapon.Value.ItemData.Count.Value <= 0)
         return;
@@ -78,7 +77,7 @@ namespace _Scripts.Gameplay.Items.Weapons.Attackables
       Quaternion rotation = Quaternion.LookRotation(direction);
       Vector3 spawnPosition = _owner.position + direction * _spawnProjectileOffset;
 
-      await _projectileSpawner.CreateProjectile(_projectile, spawnPosition, rotation, 
+      _projectileSpawner.CreateProjectile(_projectile, spawnPosition, rotation, 
         _grenadeProjectileConfig);
       
       _playerBackpack.RemoveItem(_playerAttacker.CurrentWeapon.Value.ItemData.Type, 1);

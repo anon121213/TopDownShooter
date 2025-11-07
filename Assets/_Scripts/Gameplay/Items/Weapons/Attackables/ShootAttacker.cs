@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using _Scripts.Gameplay.health;
+using _Scripts.Gameplay.Projectiles;
 using _Scripts.Gameplay.Projectiles.Data;
 using _Scripts.Gameplay.Projectiles.Spawner;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace _Scripts.Gameplay.Items.Weapons.Attackables
   public class ShootAttacker : IAttackable
   {
     private readonly IProjectileSpawner _projectileSpawner;
-    private readonly AssetReferenceGameObject _projectile;
+    private readonly Projectile _projectile;
     private readonly Transform _owner;
     private readonly ShootProjectileConfig _shootProjectileConfig;
     private readonly float _findTargetRadius;
@@ -18,7 +19,7 @@ namespace _Scripts.Gameplay.Items.Weapons.Attackables
     private readonly Collider[] _results = new Collider[30];
 
     public ShootAttacker(IProjectileSpawner projectileSpawner,
-      AssetReferenceGameObject projectile,
+      Projectile projectile,
       Transform owner,
       ShootProjectileConfig shootProjectileConfig,
       float findTargetRadius,
@@ -32,7 +33,7 @@ namespace _Scripts.Gameplay.Items.Weapons.Attackables
       _spawnProjectileOffset = spawnProjectileOffset;
     }
         
-    public async UniTask Attack()
+    public void Attack()
     {
       int count = Physics.OverlapSphereNonAlloc(_owner.position, _findTargetRadius, _results);
       if (count == 0)
@@ -68,8 +69,7 @@ namespace _Scripts.Gameplay.Items.Weapons.Attackables
       Quaternion rotation = Quaternion.LookRotation(direction);
       Vector3 spawnPosition = _owner.position + direction * _spawnProjectileOffset;
 
-      await _projectileSpawner.CreateProjectile(_projectile, spawnPosition, rotation, 
-        _shootProjectileConfig);
+      _projectileSpawner.CreateProjectile(_projectile, spawnPosition, rotation, _shootProjectileConfig);
     }
   }
 }

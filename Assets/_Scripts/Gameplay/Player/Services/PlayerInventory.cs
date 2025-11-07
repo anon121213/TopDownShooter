@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using _Scripts.Gameplay.Items.Weapons;
+using _Scripts.Gameplay.Player.Services.Base;
 using _Scripts.Infrastructure.Services.Input;
-using _Scripts.Infrastructure.Services.Player;
 using UnityEngine;
 
 namespace _Scripts.Gameplay.Player.Services

@@ -12,11 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c90696358ee4df294885c68f3c5f74a, type: 3}
   m_Name: ShootProjectileConfig
   m_EditorClassIdentifier: 
-  <Prefab>k__BackingField:
-    m_AssetGUID: 005f6b9395705924c9013de62be1eb91
-    m_SubObjectName: 
-    m_SubObjectGUID: 
-    m_SubObjectType: 
-    m_EditorAssetChanged: 0
+  <Prefab>k__BackingField: {fileID: 3703596544658918924, guid: 005f6b9395705924c9013de62be1eb91, type: 3}
   <Force>k__BackingField: 40
   <Damage>k__BackingField: 30

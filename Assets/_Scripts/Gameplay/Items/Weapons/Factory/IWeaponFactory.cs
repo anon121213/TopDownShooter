@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace _Scripts.Gameplay.Items.Weapons.Factory
 {
-  public interface IWeaponFactory : IWarmupable
+  public interface IWeaponFactory
   {
     IWeapon CreateWeapon(ItemType itemType, Transform owner);
   }

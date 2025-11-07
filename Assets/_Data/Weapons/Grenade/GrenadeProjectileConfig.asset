@@ -12,12 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2ec935eaf73428d90b91c1b7864b53a, type: 3}
   m_Name: GrenadeProjectileConfig
   m_EditorClassIdentifier: 
-  <Prefab>k__BackingField:
-    m_AssetGUID: eede75643e9c61f4c98453f0b9dfd43e
-    m_SubObjectName: 
-    m_SubObjectGUID: 
-    m_SubObjectType: 
-    m_EditorAssetChanged: 0
+  <Prefab>k__BackingField: {fileID: 1914960259036692505, guid: eede75643e9c61f4c98453f0b9dfd43e, type: 3}
   <Force>k__BackingField: 10
   <Damage>k__BackingField: 100
   <Radius>k__BackingField: 7

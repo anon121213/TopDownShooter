@@ -1,6 +1,6 @@
 using System;
 using _Scripts.Gameplay.Items.Weapons;
-using _Scripts.Infrastructure.Services.Player;
+using _Scripts.Gameplay.Player.Services.Base;
 using Cysharp.Threading.Tasks;
 using UniRx;
 
@@ -11,6 +11,6 @@ namespace _Scripts.Gameplay.Player.Services
     IReadOnlyReactiveProperty<IWeapon> CurrentWeapon { get; }
     event Action OnAttack;
     void SwitchWeapon(IWeapon weapon);
-    UniTask<bool> TryAttack();
+    bool TryAttack();
   }
 }

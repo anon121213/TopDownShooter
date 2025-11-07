@@ -23,12 +23,12 @@ namespace _Scripts.Gameplay.Player.Services
         _currentWeapon.Value = weapon;
     }
 
-    public async UniTask<bool> TryAttack()
+    public bool TryAttack()
     {
       if (!_isCanAttack)
         return false;
 
-      if (!await _currentWeapon.Value.TryAttack()) 
+      if (!_currentWeapon.Value.TryAttack()) 
         return false;
 
       OnAttack?.Invoke();

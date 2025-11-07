@@ -1,28 +1,30 @@
 ﻿using _Scripts.Gameplay.health.Data;
 using _Scripts.Gameplay.health.UI;
-using _Scripts.Infrastructure.Services.Player;
+using _Scripts.Gameplay.Player;
+using _Scripts.Gameplay.Player.Services.Base;
 
 namespace _Scripts.Gameplay.health
 {
   public class PlayerHealth : IInitializable, IPlayerHealth
   {
-    private Health _health;
+    private readonly IReadOnlyPlayerModel _playerModel;
+    private readonly Health _health;
+    
     private IHealthPresenter _healthPresenter;
     private PlayerHealthConfig _config;
 
-    public void Construct(Health health,
-      IHealthPresenter healthPresenter,
-      PlayerHealthConfig config)
+    public PlayerHealth(PlayerView playerView, IReadOnlyPlayerModel playerModel)
     {
-      _health = health;
-      _healthPresenter = healthPresenter;
-      _config = config;
+      _playerModel = playerModel;
+      _health = playerView.Health;
     }
 
     public void Initialize()
     {
+      _config = _playerModel.PlayerConfig.HealthConfig;
       _health.Construct(_config.InitHealth);
-      _healthPresenter.Initialize(_health);
+
+      //_healthPresenter.Initialize(_health);
     }
 
     public void Enable() { }
@@ -31,9 +33,6 @@ namespace _Scripts.Gameplay.health
   
   public interface IPlayerHealth : IPlayerService
   {
-    void Construct(Health health,
-      IHealthPresenter healthPresenter,
-      PlayerHealthConfig config);
   }
 }
 

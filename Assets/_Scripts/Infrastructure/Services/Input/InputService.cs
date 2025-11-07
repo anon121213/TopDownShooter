@@ -44,8 +44,7 @@
        _input.Player.SwitchWeapon.performed -= InputHandler;
      }
 
-     public void Dispose() => 
-       Disable();
+     public void Dispose() => Disable();
    }
 
    public interface IInputService
@@ -54,5 +53,7 @@
      event Action OnStopMove;
      event Action OnChangeWeapon;
      Vector2 MoveDirection { get; }
+     void Enable();
+     void Disable();
    }
  }

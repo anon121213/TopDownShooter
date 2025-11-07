@@ -1,9 +1,11 @@
-using _Scripts.Infrastructure.Services.Warmup;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 
 namespace _Scripts.Infrastructure.Services.Data.DataProvider
 {
-  public interface IStaticDataProvider : IWarmupable
+  public interface IStaticDataProvider
   {
+    UniTask Initialize(CancellationToken ct);
     TData GetConfig<TData>();
   }
 }

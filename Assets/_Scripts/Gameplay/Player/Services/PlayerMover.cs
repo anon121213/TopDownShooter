@@ -1,14 +1,15 @@
 ﻿using _Scripts.Gameplay.Player.Data;
+using _Scripts.Gameplay.Player.Services.Base;
 using _Scripts.Infrastructure.Services.Data.DataProvider;
 using _Scripts.Infrastructure.Services.Input;
-using _Scripts.Infrastructure.Services.Player;
 using UniRx;
 using UnityEngine;
 
 namespace _Scripts.Gameplay.Player.Services
 {
-  public class PlayerMover : IPlayerMover, IUpdatable
+  public class PlayerMover : IPlayerMover, IUpdatable, IInitializable
   {
+    private readonly PlayerView _playerView;
     private readonly IInputService _inputService;
     private readonly IStaticDataProvider _staticDataProvider;
     private CharacterController _characterController;
@@ -17,16 +18,18 @@ namespace _Scripts.Gameplay.Player.Services
     private readonly ReactiveProperty<bool> _isMoving = new();
     public IReadOnlyReactiveProperty<bool> IsMoving => _isMoving;
 
-    public PlayerMover(IInputService inputService,
+    public PlayerMover(PlayerView playerView,
+      IInputService inputService,
       IStaticDataProvider staticDataProvider)
     {
+      _playerView = playerView;
       _inputService = inputService;
       _staticDataProvider = staticDataProvider;
     }
 
-    public void Construct(CharacterController characterController)
+    public void Initialize()
     {
-      _characterController = characterController;
+      _characterController = _playerView.CharacterController;
       _speed = _staticDataProvider.GetConfig<PlayerConfig>().MoveSpeed;
     }
 
@@ -64,7 +67,6 @@ namespace _Scripts.Gameplay.Player.Services
 
   public interface IPlayerMover : IPlayerService
   {
-    void Construct(CharacterController characterController);
     IReadOnlyReactiveProperty<bool> IsMoving { get; }
   }
 }

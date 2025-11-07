@@ -1,18 +1,38 @@
 ﻿using System;
-using Cysharp.Threading.Tasks;
-using UnityEngine.AddressableAssets;
+using FishNet.Managing;
+using FishNet.Managing.Scened;
+using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace _Scripts.Infrastructure.Services.Scenes
 {
   public class SceneLoader : ISceneLoader
   {
-    public async UniTask Load(string sceneName, Action onLoaded = null) =>
-      await LoadScene(sceneName, onLoaded);
+    private readonly NetworkManager _networkManager;
 
-    private async UniTask LoadScene(string sceneName, Action onLoaded = null)
+    public SceneLoader(NetworkManager networkManager)
     {
-      await Addressables.LoadSceneAsync(sceneName);
-      onLoaded?.Invoke();
+      _networkManager = networkManager;
     }
+
+    public void Load(string sceneName, Action onLoaded = null)
+      => LoadScene(sceneName, onLoaded);
+
+    private void LoadScene(string sceneName, Action onLoaded = null)
+    {
+      var currentSceneName = SceneManager.GetActiveScene().name;
+      _networkManager.SceneManager.OnLoadEnd += Handler;
+      _networkManager.SceneManager.LoadConnectionScenes(new SceneLoadData(sceneName));
+      return;
+
+      void Handler(SceneLoadEndEventArgs args)
+      {
+        _networkManager.SceneManager.OnLoadEnd -= Handler;
+        onLoaded?.Invoke();
+        Unload(currentSceneName);
+      }
+    }
+
+    private void Unload(string sceneName) => 
+      _networkManager.SceneManager.UnloadConnectionScenes(new SceneUnloadData(sceneName));
   }
 }

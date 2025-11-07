@@ -56,7 +56,7 @@ namespace _Scripts.Gameplay.Enemies
       DisableEnemy();
       Health.OnHealthOver -= Died;
       Destroy(gameObject);
-      _collectableSpawner.SpawnCollectable(CollectableType.Coin, transform.position, Quaternion.identity);
+      _collectableSpawner.SpawnCollectable(CollectableType.Coin, transform.position, Quaternion.identity, default); // TODO MAKE CTS
     }
 
     public void SetPatrolPoints(List<Transform> patrolPoints) => 

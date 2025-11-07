@@ -1,10 +1,14 @@
-﻿using _Scripts.Gameplay.Enemies.BehaviourTree;
+﻿using System;
+using System.Threading;
+using _Scripts.Gameplay.Enemies.Base;
+using _Scripts.Gameplay.Enemies.BehaviourTree;
 using _Scripts.Gameplay.Enemies.BehaviourTree.Nodes;
 using _Scripts.Gameplay.Enemies.BehaviourTree.Nodes.Base;
 using _Scripts.Gameplay.Enemies.Data;
 using _Scripts.Gameplay.Enemies.Services;
 using _Scripts.Infrastructure.Services.Data.AssetLoader;
 using _Scripts.Infrastructure.Services.Data.DataProvider;
+using _Scripts.Infrastructure.Services.Pool;
 using _Scripts.Infrastructure.Services.Warmup;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -16,29 +20,30 @@ namespace _Scripts.Gameplay.Enemies.Factory
   public class EnemyFactory : IEnemyFactory
   {
     private readonly IStaticDataProvider _staticDataProvider;
-    private readonly IAssetProvider _assetProvider;
     private readonly IObjectResolver _objectResolver;
-    private EnemyConfig _simpleEnemyConfig;
+    private readonly IObjectPool _objectPool;
 
+    private EnemyConfig _simpleEnemyConfig;
+    
     public EnemyFactory(IStaticDataProvider staticDataProvider,
-      IAssetProvider assetProvider,
-      IObjectResolver objectResolver)
+      IObjectResolver objectResolver,
+      IObjectPool objectPool)
     {
       _staticDataProvider = staticDataProvider;
-      _assetProvider = assetProvider;
       _objectResolver = objectResolver;
+      _objectPool = objectPool;
     }
 
-    public async UniTask Warmup()
+    public UniTask Warmup(CancellationToken ct)
     {
+      // TODO MAKE ENEMIES POOL
       _simpleEnemyConfig = _staticDataProvider.GetConfig<EnemyConfig>();
-      await _assetProvider.LoadAssetAsync(_simpleEnemyConfig.Prefab);
+      return UniTask.CompletedTask;
     }
 
-    public async UniTask<SimpleEnemy> CreateSimpleEnemy(Vector3 at, Quaternion look)
+    public SimpleEnemy CreateSimpleEnemy(Vector3 at, Quaternion look)
     {
-      SimpleEnemy prefab = await _assetProvider.LoadAssetAsync<SimpleEnemy>(_simpleEnemyConfig.Prefab);
-      SimpleEnemy enemy = _objectResolver.Instantiate(prefab, at, look);
+      SimpleEnemy enemy = (SimpleEnemy)_objectResolver.Instantiate(_simpleEnemyConfig.Prefab, at, look);
       IEnemyMover enemyMover = new EnemyMover(enemy.NavMeshAgent, _simpleEnemyConfig);
       
       enemy.Construct(_simpleEnemyConfig, enemyMover);
@@ -46,6 +51,9 @@ namespace _Scripts.Gameplay.Enemies.Factory
       enemy.EnableEnemy();
       return enemy;
     }
+
+    public void ReturnEnemyToPool(Enemy enemy, Enemy prefab) => 
+      _objectPool.ReturnGameObject(enemy, prefab);
 
     private EnemyAI CreateSimpleEnemyAI(SimpleEnemy enemy)
     {
@@ -77,6 +85,7 @@ namespace _Scripts.Gameplay.Enemies.Factory
 
   public interface IEnemyFactory : IWarmupable
   {
-    UniTask<SimpleEnemy> CreateSimpleEnemy(Vector3 at, Quaternion look);
+    SimpleEnemy CreateSimpleEnemy(Vector3 at, Quaternion look);
+    void ReturnEnemyToPool(Enemy enemy, Enemy prefab);
   }
 }

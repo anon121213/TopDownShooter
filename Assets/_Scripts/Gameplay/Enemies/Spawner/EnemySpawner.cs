@@ -1,36 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
+using _Scripts.Gameplay.Enemies.Base;
 using _Scripts.Gameplay.Enemies.Factory;
-using Cysharp.Threading.Tasks;
+using _Scripts.Infrastructure.Scopes;
 using UnityEngine;
-using VContainer;
-
 namespace _Scripts.Gameplay.Enemies.Spawner
 {
-  public class EnemySpawner : MonoBehaviour, IEnemySpawner
+  public class EnemySpawner : IEnemySpawner
   {
-    [SerializeField] private List<EnemySpawnData> _enemiesData = new();
-    private readonly List<SimpleEnemy> _enemies = new();
-    private IEnemyFactory _enemyFactory;
-        
-    [Inject]
-    private void Construct(IEnemyFactory enemyFactory) => 
-      _enemyFactory = enemyFactory;
+    private readonly List<Enemy> _enemies = new();
+    
+    private readonly IEnemyFactory _enemyFactory;
+    private readonly ArenaSceneView _arenaSceneView;
 
-    public async UniTask<List<SimpleEnemy>> CreateSimpleEnemiesOnSpawnPoints()
+    public EnemySpawner(IEnemyFactory enemyFactory, ArenaSceneView arenaSceneView)
     {
-      foreach (var data in _enemiesData)
+      _enemyFactory = enemyFactory;
+      _arenaSceneView = arenaSceneView;
+    }
+    
+    public List<SimpleEnemy> CreateSimpleEnemiesOnSpawnPoints()
+    {
+      var enemies = new List<SimpleEnemy>();
+      
+      foreach (var data in _arenaSceneView.EnemySpawnData)
       {
         if (data.spawnPoint == null)
           continue;
 
-        SimpleEnemy enemy = await _enemyFactory.CreateSimpleEnemy(data.spawnPoint.position, Quaternion.identity);
-                
+        SimpleEnemy enemy = _enemyFactory.CreateSimpleEnemy(data.spawnPoint.position, Quaternion.identity);
+        
         enemy.SetPatrolPoints(data.patrolPoints);
         enemy.Initialize();
         _enemies.Add(enemy);
+        enemies.Add(enemy);
       }
-      return _enemies;
+      
+      return enemies;
     }
   }
 

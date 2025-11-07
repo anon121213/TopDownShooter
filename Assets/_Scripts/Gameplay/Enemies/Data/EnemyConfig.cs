@@ -1,12 +1,12 @@
-﻿using UnityEngine;
-using UnityEngine.AddressableAssets;
+﻿using _Scripts.Gameplay.Enemies.Base;
+using UnityEngine;
 
 namespace _Scripts.Gameplay.Enemies.Data
 {
   [CreateAssetMenu(menuName = "Data/Configs/Enemies/EnemyConfig", fileName = "EnemyConfig")]
   public class EnemyConfig : ScriptableObject
   {
-    [field: SerializeField] public AssetReferenceGameObject Prefab { get; private set; }
+    [field: SerializeField] public Enemy Prefab { get; private set; }
     [field: SerializeField] public float CheckTargetRadius { get; private set; }
     [field: SerializeField] public float CheckTargetDelay { get; private set; }
     [field: SerializeField] public float WaitPatrolTime { get; private set; }

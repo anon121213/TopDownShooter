@@ -1,113 +1,149 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using UniRx;
 using UnityEngine;
 using UnityEngine.Pool;
 using VContainer;
 using VContainer.Unity;
+using Object = UnityEngine.Object;
 
-namespace _Scripts.Infrastructure.Services.Pool
-{
-  public class ObjectPool : IObjectPool
-  {
-    private readonly Dictionary<GameObject, ObjectPool<GameObject>> _pooledObjects = new();
-    private readonly IObjectResolver _resolver;
+namespace _Scripts.Infrastructure.Services.Pool {
+    public class ObjectPool : IObjectPool, IDisposable {
+        private readonly IObjectResolver _resolver;
+        private readonly Dictionary<GameObject, ObjectPool<GameObject>> _pooledObjects = new();
+        private readonly CompositeDisposable _returnInstancesTimersDisposable = new();
+        private readonly HashSet<GameObject> _returnInstances = new();
 
-    public ObjectPool(IObjectResolver resolver) => 
-      _resolver = resolver;
+        private const int DefaultPrewarmCount = 10;
 
-    public T GetGameObject<T>(T prefab, Vector3 position, Quaternion rotation) where T : MonoBehaviour
-    {
-      if (_pooledObjects.Keys.Contains(prefab.gameObject) == false) 
-        RegisterPrefabInternal(prefab.gameObject, position, rotation, 3, null);
+        public ObjectPool(IObjectResolver resolver) => _resolver = resolver;
 
-      var gameObject = _pooledObjects[prefab.gameObject].Get();
+        public void Warmup(GameObject prefab, Vector3 position = default, Quaternion rotation = default,
+                           Transform root = null, int count = DefaultPrewarmCount) {
+            if (!_pooledObjects.ContainsKey(prefab))
+                RegisterPrefabInternal(prefab, position, rotation, root, true, count);
+        }
 
-      var noTransform = gameObject.transform;
-      noTransform.position = position;
-      noTransform.rotation = rotation;
-      
-      gameObject.SetActive(true);
-      return gameObject.GetComponent<T>();
+        public GameObject GetGameObject(GameObject prefab, Vector3 position, Quaternion rotation, Transform root = null,
+                                        bool useBatchSpawn = true, int count = DefaultPrewarmCount) {
+            if (!_pooledObjects.ContainsKey(prefab))
+                RegisterPrefabInternal(prefab, position, rotation, root, useBatchSpawn, count);
+
+            var instance = _pooledObjects[prefab].Get();
+            var transform = instance.transform;
+
+            transform.position = position;
+            transform.rotation = rotation;
+            transform.SetParent(root);
+
+            instance.SetActive(true);
+            return instance;
+        }
+        
+        public T GetGameObject<T>(T prefab, Vector3 position, Quaternion rotation, Transform root = null,
+                                  bool useBatchSpawn = true, int count = DefaultPrewarmCount) where T : MonoBehaviour {
+            return GetGameObject<T>(prefab.gameObject, position, rotation, root, useBatchSpawn, count);
+        }
+        
+        public T GetGameObject<T>(GameObject prefab, Vector3 position, Quaternion rotation, Transform root = null,
+                                  bool useBatchSpawn = true, int count = DefaultPrewarmCount) where T : MonoBehaviour {
+            var instance = GetGameObject(prefab, position, rotation, root, useBatchSpawn, count);
+            return instance.GetComponent<T>();
+        }
+
+        public void ReturnGameObject(GameObject instance, GameObject prefab) {
+            if (_pooledObjects.TryGetValue(prefab, out var pool))
+                pool.Release(instance);
+        }
+
+        public void ReturnGameObject<T>(T instance, GameObject prefab) where T : MonoBehaviour {
+            if (_pooledObjects.TryGetValue(prefab, out var pool))
+                pool.Release(instance.gameObject);
+        }
+
+        public void ReturnGameObject<T>(T instance, T prefab) where T : MonoBehaviour {
+            var key = prefab.gameObject;
+            if (_pooledObjects.TryGetValue(key, out var pool))
+                pool.Release(instance.gameObject);
+        }
+
+        public void ReturnGameObject(GameObject instance, GameObject prefab, float seconds, Action<GameObject> beforeReturn = null, CompositeDisposable disposable = null) {
+            if (!_returnInstances.Add(instance))
+                return;
+
+            _returnInstancesTimersDisposable.Add(disposable);
+            
+            Observable
+                .Timer(TimeSpan.FromSeconds(seconds))
+                .Subscribe(_ => {
+                    beforeReturn?.Invoke(instance);
+                    ReturnGameObject(instance, prefab);
+                    _returnInstances.Remove(instance);
+                })
+                .AddTo(_returnInstancesTimersDisposable);
+        }
+
+        public void ReturnGameObject<T>(T instance, GameObject prefab, float seconds, Action<T> beforeReturn = null, CompositeDisposable disposable = null) where T : MonoBehaviour {
+            if (!_returnInstances.Add(instance.gameObject))
+                return;
+            
+            _returnInstancesTimersDisposable.Add(disposable);
+            
+            Observable
+                .Timer(TimeSpan.FromSeconds(seconds))
+                .Subscribe(_ => {
+                    beforeReturn?.Invoke(instance);
+                    ReturnGameObject(instance, prefab);
+                    _returnInstances.Remove(instance.gameObject);
+                })
+                .AddTo(_returnInstancesTimersDisposable);
+        }
+
+        public void ReturnGameObject<T>(T instance, T prefab, float seconds, Action<T> beforeReturn = null, CompositeDisposable disposable = null) where T : MonoBehaviour {
+            if (!_returnInstances.Add(instance.gameObject))
+                return;
+ 
+            _returnInstancesTimersDisposable.Add(disposable);
+            
+            Observable
+                .Timer(TimeSpan.FromSeconds(seconds))
+                .Subscribe(_ => {
+                    beforeReturn?.Invoke(instance);
+                    ReturnGameObject(instance, prefab);
+                    _returnInstances.Remove(instance.gameObject);
+                })
+                .AddTo(_returnInstancesTimersDisposable);
+        }
+
+        private void RegisterPrefabInternal(GameObject prefab, Vector3 position, Quaternion rotation, Transform root,
+                                            bool useBatchSpawn = false, int prewarmCount = 0) {
+            GameObject CreateFunc() => _resolver.Instantiate(prefab, position, rotation, root);
+            void OnGet(GameObject go) => go.SetActive(false);
+            void OnRelease(GameObject go) => go.SetActive(false);
+            void OnDestroy(GameObject go) => Object.Destroy(go);
+
+            var pool = new ObjectPool<GameObject>(CreateFunc, OnGet, OnRelease, OnDestroy,
+                defaultCapacity: useBatchSpawn ? prewarmCount : 0);
+            _pooledObjects.Add(prefab, pool);
+
+            if (!useBatchSpawn)
+                return;
+
+            var objs = new GameObject[prewarmCount];
+
+            for (var i = 0; i < prewarmCount; i++)
+                objs[i] = pool.Get();
+
+            foreach (var obj in objs)
+                pool.Release(obj);
+        }
+
+        public void Dispose() {
+            foreach (var pool in _pooledObjects.Values)
+                pool.Clear();
+
+            _pooledObjects.Clear();
+            _returnInstancesTimersDisposable.Dispose();
+        }
     }
-    
-    public T GetGameObject<T>(T prefab, Vector3 position, Quaternion rotation, Transform root) where T : MonoBehaviour
-    {
-      if (_pooledObjects.Keys.Contains(prefab.gameObject) == false) 
-        RegisterPrefabInternal(prefab.gameObject, position, rotation,3, root);
-
-      var gameObject = _pooledObjects[prefab.gameObject].Get();
-
-      var noTransform = gameObject.transform;
-      noTransform.position = position;
-      noTransform.rotation = rotation;
-      
-      gameObject.SetActive(true);
-      return gameObject.GetComponent<T>();
-    }
-
-    public GameObject GetGameObject(GameObject prefab, Vector3 position, Quaternion rotation)
-    {
-      if (_pooledObjects.Keys.Contains(prefab.gameObject) == false) 
-        RegisterPrefabInternal(prefab.gameObject, position, rotation,3, null);
-
-      var gameObject = _pooledObjects[prefab.gameObject].Get();
-
-      var noTransform = gameObject.transform;
-      noTransform.position = position;
-      noTransform.rotation = rotation;
-
-      gameObject.gameObject.SetActive(true);
-
-      return gameObject;
-    }
-
-    public void ReturnGameObject<T>(GameObject tGameObject, T prefab) where T : MonoBehaviour
-    {
-      _pooledObjects[prefab.gameObject].Release(tGameObject);
-    }
-
-    public void ReturnGameObject(GameObject tGameObject, GameObject mPrefab)
-    {
-      _pooledObjects[mPrefab].Release(tGameObject);
-    }
-
-    void RegisterPrefabInternal(GameObject prefab, Vector3 position, Quaternion rotation, int prewarmCount, Transform root)
-    {
-      GameObject CreateFunc()
-      {
-        var instance = _resolver.Instantiate(prefab, position, rotation, root);
-        return instance;
-      }
-
-      void ActionOnGet(GameObject tGameObject)
-      {
-        tGameObject.gameObject.SetActive(false);
-      }
-
-      void ActionOnRelease(GameObject tGameObject)
-      {
-        tGameObject.gameObject.SetActive(false);
-      }
-
-      void ActionOnDestroy(GameObject tGameObject)
-      {
-        Object.Destroy(tGameObject.gameObject);
-      }
-
-      _pooledObjects[prefab] = new ObjectPool<GameObject>(CreateFunc, ActionOnGet, ActionOnRelease, ActionOnDestroy,
-        defaultCapacity: prewarmCount);
-
-      var prewarmGameObjects = new List<GameObject>();
-      
-      for (var i = 0; i < prewarmCount; i++)
-      {
-        prewarmGameObjects.Add(_pooledObjects[prefab].Get());
-      }
-
-      foreach (var networkObject in prewarmGameObjects)
-      {
-        _pooledObjects[prefab].Release(networkObject);
-      }
-    }
-  }
 }

@@ -1,24 +1,16 @@
 ﻿using _Scripts.Gameplay.Collectables.Base;
-using _Scripts.Gameplay.Collectables.UI;
-using _Scripts.Infrastructure.Services.Player;
+using _Scripts.Gameplay.Player.Services.Base;
 using UniRx;
 using UnityEngine;
 
 namespace _Scripts.Gameplay.Player.Services
 {
-  public class PlayerCollecter : IPlayerCollecter
+  public class PlayerCollector : IPlayerCollector
   {
-    private readonly ICoinsPresenter _coinsPresenter;
     private readonly ReactiveProperty<int> _points = new();
     public IReadOnlyReactiveProperty<int> Points => _points;
 
     private bool _enabled;
-
-    public PlayerCollecter(ICoinsPresenter coinsPresenter) => 
-      _coinsPresenter = coinsPresenter;
-
-    public void Initialize() => 
-      _coinsPresenter.Initialize();
 
     public void Enable() => 
       _enabled = true;
@@ -39,7 +31,7 @@ namespace _Scripts.Gameplay.Player.Services
       _enabled = false;
   }
 
-  public interface IPlayerCollecter : IPlayerService, IInitializable
+  public interface IPlayerCollector : IPlayerService
   {
     IReadOnlyReactiveProperty<int> Points { get; }
     void OnCollide(Collider other);

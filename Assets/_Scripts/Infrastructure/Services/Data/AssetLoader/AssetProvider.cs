@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -11,10 +12,10 @@ namespace _Scripts.Infrastructure.Services.Data.AssetLoader
   {
     private readonly Dictionary<string, List<AsyncOperationHandle>> _usedResources = new();
 
-    public async UniTask<GameObject> LoadAssetAsync(AssetReference path)
+    public async UniTask<GameObject> LoadAssetAsync(AssetReference path, CancellationToken ct)
     {
       var handle = Addressables.LoadAssetAsync<GameObject>(path);
-      await handle.Task;
+      await handle.ToUniTask(cancellationToken: ct);
 
       if (handle.Status == AsyncOperationStatus.Succeeded)
       {
@@ -22,14 +23,14 @@ namespace _Scripts.Infrastructure.Services.Data.AssetLoader
         return handle.Result;
       }
 
-      Debug.LogError($"Не удалось загрузить префаб по пути: {path}");
+      Debug.LogError($"Load prefab by path: {path} error!");
       return null;
     }
 
-    public async UniTask<TObject> LoadAssetAsync<TObject>(AssetReference path) where TObject : Component 
+    public async UniTask<TObject> LoadAssetAsync<TObject>(AssetReference path, CancellationToken ct) where TObject : Component 
     {
       var handle = Addressables.LoadAssetAsync<GameObject>(path);
-      await handle.Task;
+      await handle.ToUniTask(cancellationToken: ct);
 
       if (handle.Status == AsyncOperationStatus.Succeeded)
       {
@@ -41,14 +42,14 @@ namespace _Scripts.Infrastructure.Services.Data.AssetLoader
         }
       }
 
-      Debug.LogError($"Не удалось загрузить компонент {typeof(TObject).Name} из префаба по пути: {path}");
+      Debug.LogError($"Load component {typeof(TObject).Name} from prefab by path: {path} error!");
       return null;
     }
 
-    public async UniTask<List<T>> LoadAssetsByLabelAsync<T>(string label) where T : class
+    public async UniTask<List<T>> LoadAssetsByLabelAsync<T>(string label, CancellationToken ct) where T : class
     {
       var handle = Addressables.LoadAssetsAsync<T>(label);
-      await handle.Task;
+      await handle.ToUniTask(cancellationToken: ct);
 
       if (handle.Status == AsyncOperationStatus.Succeeded)
       {
@@ -56,7 +57,7 @@ namespace _Scripts.Infrastructure.Services.Data.AssetLoader
         return handle.Result.ToList();
       }
 
-      Debug.LogError($"Не удалось загрузить ассеты по метке: {label}");
+      Debug.LogError($"Load asset by label: {label} error");
       return new List<T>();
     }
 

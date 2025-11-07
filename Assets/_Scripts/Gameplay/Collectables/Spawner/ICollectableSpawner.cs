@@ -1,13 +1,13 @@
+using System.Threading;
 using _Scripts.Gameplay.Collectables.Base;
 using _Scripts.Gameplay.Collectables.Data;
-using Cysharp.Threading.Tasks;
+using _Scripts.Infrastructure.Services.Warmup;
 using UnityEngine;
 
 namespace _Scripts.Gameplay.Collectables.Spawner
 {
-  public interface ICollectableSpawner
+  public interface ICollectableSpawner : IWarmupable
   {
-    void Initialize();
-    UniTask<Collectable> SpawnCollectable(CollectableType type, Vector3 at, Quaternion rotation);
+    Collectable SpawnCollectable(CollectableType type, Vector3 at, Quaternion rotation, CancellationToken ct);
   }
 }

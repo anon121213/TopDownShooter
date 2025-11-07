@@ -6,34 +6,26 @@ using _Scripts.Gameplay.Player.Services;
 using _Scripts.Gameplay.Projectiles.Data;
 using _Scripts.Gameplay.Projectiles.Spawner;
 using _Scripts.Infrastructure.Services.Data.DataProvider;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace _Scripts.Gameplay.Items.Weapons.Factory
 {
   public class WeaponFactory : IWeaponFactory
   {
-    private readonly IStaticDataProvider _staticDataProvider;
     private readonly IProjectileSpawner _projectileSpawner;
     private readonly IPlayerBackpack _playerBackpack;
     private readonly IPlayerAttacker _playerAttacker;
-    private AllWeaponsConfig _weaponsConfigs;
+    private readonly AllWeaponsConfig _weaponsConfigs;
 
     public WeaponFactory(IStaticDataProvider staticDataProvider,
       IProjectileSpawner projectileSpawner,
       IPlayerBackpack playerBackpack,
       IPlayerAttacker playerAttacker)
     {
-      _staticDataProvider = staticDataProvider;
       _projectileSpawner = projectileSpawner;
       _playerBackpack = playerBackpack;
       _playerAttacker = playerAttacker;
-    }
-
-    public async UniTask Warmup()
-    {
-      _weaponsConfigs = _staticDataProvider.GetConfig<AllWeaponsConfig>();
-      await UniTask.CompletedTask;
+      _weaponsConfigs = staticDataProvider.GetConfig<AllWeaponsConfig>();
     }
 
     public IWeapon CreateWeapon(ItemType itemType, Transform owner)

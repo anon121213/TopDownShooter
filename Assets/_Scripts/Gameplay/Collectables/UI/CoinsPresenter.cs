@@ -2,25 +2,17 @@
 using UniRx;
 using UnityEngine;
 using VContainer;
+using VContainer.Unity;
 
 namespace _Scripts.Gameplay.Collectables.UI
 {
-  public class CoinsPresenter : MonoBehaviour, ICoinsPresenter
+  public class CoinsPresenter : MonoBehaviour, IInitializable
   {
     [SerializeField] private CoinsView _coinsView;
-    private IPlayerCollecter _collecter;
-
-    [Inject]
-    private void Construct(IPlayerCollecter collecter) => 
-      _collecter = collecter;
+    [Inject] private IPlayerCollector _collector;
 
     public void Initialize() => 
-      _collecter.Points.Subscribe(value => 
+      _collector.Points.Subscribe(value => 
         _coinsView.ChangeCoinsValue(value)).AddTo(this);
-  }
-
-  public interface ICoinsPresenter
-  {
-    void Initialize();
   }
 }

@@ -12,12 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef6b91ac1d364944ad03dbaedf234308, type: 3}
   m_Name: EnemyConfig
   m_EditorClassIdentifier: 
-  <Prefab>k__BackingField:
-    m_AssetGUID: 55ca948b9ef780743bb8e7e0480e716c
-    m_SubObjectName: 
-    m_SubObjectGUID: 
-    m_SubObjectType: 
-    m_EditorAssetChanged: 0
+  <Prefab>k__BackingField: {fileID: 9000335725790477587, guid: 55ca948b9ef780743bb8e7e0480e716c, type: 3}
   <CheckTargetRadius>k__BackingField: 6
   <CheckTargetDelay>k__BackingField: 0.5
   <WaitPatrolTime>k__BackingField: 2.5

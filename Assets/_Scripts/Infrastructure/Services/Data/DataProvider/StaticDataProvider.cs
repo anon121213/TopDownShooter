@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Threading;
 using _Scripts.Infrastructure.Services.Data.AssetLoader;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -13,12 +13,14 @@ namespace _Scripts.Infrastructure.Services.Data.DataProvider
     private readonly IAssetProvider _assetProvider;
     private List<ScriptableObject> _staticData;
 
-    public StaticDataProvider(IAssetProvider assetProvider) => 
-      _assetProvider = assetProvider;
-
-    public async UniTask Warmup()
+    public StaticDataProvider(IAssetProvider assetProvider)
     {
-      _staticData = await _assetProvider.LoadAssetsByLabelAsync<ScriptableObject>(Config);
+      _assetProvider = assetProvider;
+    }
+
+    public async UniTask Initialize(CancellationToken ct)
+    {
+      _staticData = await _assetProvider.LoadAssetsByLabelAsync<ScriptableObject>(Config, ct);
     }
 
     public TData GetConfig<TData>() => 

@@ -1,54 +1,48 @@
-﻿using _Scripts.Gameplay.PlayerCamera.Data;
+﻿using System;
+using System.Threading;
+using _Scripts.Gameplay.PlayerCamera.Data;
 using _Scripts.Gameplay.PlayerCamera.Services;
-using _Scripts.Infrastructure.Services.Data.AssetLoader;
 using _Scripts.Infrastructure.Services.Data.DataProvider;
-using _Scripts.Infrastructure.Services.Warmup;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace _Scripts.Gameplay.PlayerCamera.Factory
 {
-  public class CameraFactory : ICameraFactory
+  public class CameraFactory : ICameraFactory, IDisposable
   {
     private readonly ICameraProvider _cameraProvider;
-    private readonly IStaticDataProvider _staticDataProvider;
-    private readonly IAssetProvider _assetProvider;
     private readonly ICameraFollower _cameraFollower;
     private readonly ICameraController _cameraController;
-    private CameraConfig _config;
+    private readonly CameraConfig _config;
+
+    private readonly CancellationTokenSource _cts = new();
 
     public CameraFactory(ICameraProvider cameraProvider,
       IStaticDataProvider staticDataProvider,
-      IAssetProvider assetProvider,
       ICameraFollower cameraFollower,
       ICameraController cameraController)
     {
       _cameraProvider = cameraProvider;
-      _staticDataProvider = staticDataProvider;
-      _assetProvider = assetProvider;
       _cameraFollower = cameraFollower;
       _cameraController = cameraController;
+      _config = staticDataProvider.GetConfig<CameraConfig>();
     }
-
-    public async UniTask Warmup()
+    
+    public void CreateCamera(Transform follow)
     {
-      _config = _staticDataProvider.GetConfig<CameraConfig>();
-      await _assetProvider.LoadAssetAsync(_config.Prefab);
-    }
-
-    public async UniTask CreateCamera(Transform follow)
-    {
-      Camera prefab = await _assetProvider.LoadAssetAsync<Camera>(_config.Prefab);
-      Camera camera = Object.Instantiate(prefab, _config.Position, Quaternion.Euler(_config.Rotation));
+      Camera camera = Object.Instantiate(_config.Prefab, _config.Position, Quaternion.Euler(_config.Rotation));
       
       _cameraProvider.SetCamera(camera);
       _cameraFollower.SetTarget(follow);
       _cameraController.EnableServices();
     }
+
+    public void Dispose() => 
+      _cts?.Dispose();
   }
 
-  public interface ICameraFactory : IWarmupable
+  public interface ICameraFactory
   {
-    UniTask CreateCamera(Transform follow);
+    void CreateCamera(Transform follow);
   }
 }

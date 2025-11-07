@@ -23,12 +23,12 @@ namespace _Scripts.Gameplay.Items.Weapons
       ItemData = weaponConfig.ItemData;
     }
 
-    public async UniTask<bool> TryAttack()
+    public bool TryAttack()
     {
       if (_isReloading)
         return false;
       
-      await _attacker.Attack();
+      _attacker.Attack();
       Reload();
       return true;
     }
@@ -49,6 +49,6 @@ namespace _Scripts.Gameplay.Items.Weapons
 
   public interface IWeapon : IItem, IDisposable
   {
-    UniTask<bool> TryAttack();
+    bool TryAttack();
   }
 }
