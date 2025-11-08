@@ -22,7 +22,7 @@ namespace _Scripts.Gameplay.PlayerCamera.Services
         .Subscribe(_ => _cameraFollower.Move());
 
     public void Dispose() => 
-      _disposable.Dispose();
+      _disposable?.Dispose();
   }
 
   public interface ICameraController

@@ -1,15 +1,12 @@
 ﻿using System;
-using _Scripts.Gameplay.Items.Base;
-using _Scripts.Gameplay.Items.Weapons.Factory;
 using _Scripts.Gameplay.Player.Data;
-using _Scripts.Gameplay.Player.Services;
 using _Scripts.Gameplay.Player.Services.Base;
-using _Scripts.Gameplay.PlayerCamera.Factory;
+using _Scripts.Gameplay.Player.Spawner;
+using _Scripts.Infrastructure.Scopes.ArenaScene;
 using _Scripts.Infrastructure.Scopes.NetCore;
 using _Scripts.Infrastructure.Services.Data.DataProvider;
 using FishNet.Managing;
 using UniRx;
-using UniRx.Triggers;
 using UnityEngine;
 using IInitializable = VContainer.Unity.IInitializable;
 
@@ -17,73 +14,71 @@ namespace _Scripts.Gameplay.Player
 {
   public class PlayerEntryPoint : IInitializable, IDisposable
   {
-    private readonly PlayerView _player;
     private readonly IPlayerServices _services;
-    private readonly IPlayerCollector _collector;
-    private readonly ICameraFactory _cameraFactory;
-    private readonly IReadOnlyNetworkRoomModel _networkRoomModel;
-    private readonly INetworkSyncService _networkSyncService;
-    private readonly INetworkPlayerSyncService _playerSyncService;
-    private readonly IWeaponFactory _weaponFactory;
-    private readonly IPlayerAttacker _playerAttacker;
-    private readonly IPlayerBackpack _playerBackpack;
-
-    private readonly CompositeDisposable _disposables = new();
-    private readonly IPlayerModel _playerModel;
+    private readonly INetworkRoomModel _networkRoomModel;
     private readonly IStaticDataProvider _staticDataProvider;
     private readonly NetworkManager _networkManager;
+    private readonly IPlayerFactory _playerFactory;
+    private readonly IPlayerServices _playerServices;
+    private readonly PlayerStateDTO _playerStateDto;
+    private readonly IArenaSceneModel _arenaSceneModel;
+    private readonly PlayerScope _playerScope;
+    private readonly CompositeDisposable _disposables = new();
+    
+    private PlayerRootView _player;
 
-    public PlayerEntryPoint(PlayerView player, IPlayerServices services, IPlayerCollector collector,
-      IWeaponFactory weaponFactory, IPlayerAttacker playerAttacker, IPlayerBackpack playerBackpack,
-      ICameraFactory cameraFactory, IReadOnlyNetworkRoomModel networkRoomModel, INetworkSyncService networkSyncService,
-      INetworkPlayerSyncService playerSyncService, IPlayerModel playerModel, IStaticDataProvider staticDataProvider,
-      NetworkManager networkManager)
+    public PlayerEntryPoint(IPlayerServices services, INetworkRoomModel networkRoomModel,
+      NetworkManager networkManager,IStaticDataProvider staticDataProvider, IPlayerFactory playerFactory,
+      IPlayerServices playerServices, PlayerStateDTO playerStateDto, IArenaSceneModel arenaSceneModel,
+      PlayerScope playerScope)
     {
-      _player = player;
       _services = services;
-      _collector = collector;
-      _cameraFactory = cameraFactory;
       _networkRoomModel = networkRoomModel;
-      _networkSyncService = networkSyncService;
-      _playerSyncService = playerSyncService;
-      _playerModel = playerModel;
       _staticDataProvider = staticDataProvider;
       _networkManager = networkManager;
-      _weaponFactory = weaponFactory;
-      _playerAttacker = playerAttacker;
-      _playerBackpack = playerBackpack;
+      _playerFactory = playerFactory;
+      _playerServices = playerServices;
+      _playerStateDto = playerStateDto;
+      _arenaSceneModel = arenaSceneModel;
+      _playerScope = playerScope;
     }
 
     public void Initialize()
     {
-      _networkManager.ServerManager.Spawn((NetworkPlayerSyncService)_playerSyncService); // TODO MOVE TO SPAWNER BY SERVER 
-      Debug.LogError(((NetworkPlayerSyncService)_playerSyncService).IsSpawned);
+      _player = _playerFactory.CreatePlayer(Vector3.zero, Quaternion.identity);
+      
+      if (_networkRoomModel.IsServer.Value) 
+        _networkManager.ServerManager.Spawn(_player.gameObject);
+      
+      _player.PlayerModel.Apply(_playerStateDto);
+      _networkRoomModel.AddPlayerLocal(_player.PlayerModel);
+      _arenaSceneModel.AddPlayer(_player);
+      _arenaSceneModel.AddPlayerScope(_player.PlayerModel.ActorNumber.Value, _playerScope);
+
       var config = _staticDataProvider.GetConfig<PlayerConfig>();
-      _playerModel.SetConfig(config);
-      
-      _playerSyncService.SyncPlayerState(_networkRoomModel.ClientId.Value, new PlayerStateDTO(
-        true,
-        false,
-        _playerModel.PlayerConfig.HealthConfig.InitHealth
-      ));
-      
-      _networkSyncService.AddPlayer(_networkRoomModel.ClientId.Value);
+      _player.PlayerModel.SetConfig(config);
 
-      _cameraFactory.CreateCamera(_player.transform);
+      if (_networkRoomModel.IsServer.Value)
+        _player.PlayerModel.Health.Subscribe(health =>
+        {
+          if (health <= 0)
+          {
+            _player.PlayerModel.SetIsDead(true);
+            return;
+          }
 
-      _player.Health.OnHealthOver += Die;
-      _services.InitializeServices();
-      _services.EnableServices();
+          if (_player.PlayerModel.IsDead.Value && health > 0)
+            _player.PlayerModel.SetIsDead(false);
+        }).AddTo(_disposables);
 
-      _player.PlayerCollider.OnTriggerEnterAsObservable()
-        .Subscribe(_collector.OnCollide)
+      _player.PlayerModel.IsDead
+        .Subscribe(isDead =>
+        { if (isDead) Die(); })
         .AddTo(_disposables);
-
-      var pistol = _weaponFactory.CreateWeapon(ItemType.Pistol, _player.transform);
-      var grenade = _weaponFactory.CreateWeapon(ItemType.Grenade, _player.transform);
-      _playerBackpack.AddItem(pistol, 1);
-      _playerBackpack.AddItem(grenade, 3);
-      _playerAttacker.SwitchWeapon(pistol);
+      
+      _playerServices.ConstructServices(_player);
+      _playerServices.InitializeServices();
+      _playerServices.EnableServices();
     }
 
     private void Die()
@@ -94,8 +89,10 @@ namespace _Scripts.Gameplay.Player
 
     public void Dispose()
     {
-      _player.Health.OnHealthOver -= Die;
+      _playerFactory.ReturnPlayer(_player);
       _services.DisableServices();
+      _arenaSceneModel.RemovePlayer(_player.PlayerModel.ActorNumber.Value);
+      _arenaSceneModel.RemovePlayerScope(_player.PlayerModel.ActorNumber.Value);
       _disposables.Dispose();
     }
   }

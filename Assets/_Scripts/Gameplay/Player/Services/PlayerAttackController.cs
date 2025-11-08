@@ -4,12 +4,11 @@ using UniRx;
 
 namespace _Scripts.Gameplay.Player.Services
 {
-  public class PlayerAttackController : IPlayerAttackController
+  public class PlayerAttackController : PlayerService, IPlayerAttackController
   {
     private readonly IPlayerMover _playerMover;
     private readonly IPlayerAttacker _playerAttacker;
-    private IDisposable _moveDisposable;
-    private IDisposable _attackDisposable;
+    private readonly SerialDisposable _attackDisposable = new();
 
     public PlayerAttackController(IPlayerMover playerMover,
       IPlayerAttacker playerAttacker)
@@ -17,9 +16,9 @@ namespace _Scripts.Gameplay.Player.Services
       _playerMover = playerMover;
       _playerAttacker = playerAttacker;
     }
-
-    public void Enable() => 
-      _moveDisposable = _playerMover.IsMoving.Subscribe(Attack);
+    
+    public override void OnUpdate() => 
+      Attack(_playerMover.IsMoving.Value);
 
     private void Attack(bool isMoving)
     {
@@ -32,19 +31,16 @@ namespace _Scripts.Gameplay.Player.Services
         return;
       }
 
-      _attackDisposable = Observable.Interval(TimeSpan.FromSeconds(
+      _attackDisposable.Disposable = Observable.Interval(TimeSpan.FromSeconds(
           _playerAttacker.CurrentWeapon.Value.ItemData.ReloadDelay))
         .Subscribe(_ => _playerAttacker.TryAttack()); 
     }
-    
-    public void Disable()
-    {
+
+    public override void OnDispose() => 
       _attackDisposable?.Dispose();
-      _moveDisposable?.Dispose();
-    }
   }
 
-  public interface IPlayerAttackController : IPlayerService
+  public interface IPlayerAttackController
   {
   }
 }

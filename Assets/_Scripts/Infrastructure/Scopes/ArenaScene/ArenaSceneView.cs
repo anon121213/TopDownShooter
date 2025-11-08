@@ -1,19 +1,16 @@
 ﻿using System.Collections.Generic;
 using _Scripts.Gameplay.Collectables.UI;
 using _Scripts.Gameplay.Enemies.Spawner;
-using _Scripts.Gameplay.health.UI;
 using UnityEngine;
 
-namespace _Scripts.Infrastructure.Scopes
+namespace _Scripts.Infrastructure.Scopes.ArenaScene
 {
   public class ArenaSceneView : MonoBehaviour
   {
-    [field: SerializeField] public HealthPresenter HealthPresenter { get; private set; }
     [field: SerializeField] public CoinsPresenter CoinsPresenter { get; private set; }
     
-    [SerializeField] private List<EnemySpawnData> enemiesData = new();
+    [SerializeField] private List<EnemySpawnerView> _enemySpawnersViews = new();
 
-    public IReadOnlyList<EnemySpawnData> EnemySpawnData => enemiesData;
-
+    public IReadOnlyList<EnemySpawnerView> EnemySpawnersViews => _enemySpawnersViews;
   }
 }

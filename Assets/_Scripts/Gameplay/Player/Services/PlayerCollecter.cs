@@ -1,19 +1,24 @@
 ﻿using _Scripts.Gameplay.Collectables.Base;
 using _Scripts.Gameplay.Player.Services.Base;
 using UniRx;
+using UniRx.Triggers;
 using UnityEngine;
 
 namespace _Scripts.Gameplay.Player.Services
 {
-  public class PlayerCollector : IPlayerCollector
+  public class PlayerCollector : PlayerService, IPlayerCollector
   {
     private readonly ReactiveProperty<int> _points = new();
     public IReadOnlyReactiveProperty<int> Points => _points;
 
     private bool _enabled;
 
-    public void Enable() => 
-      _enabled = true;
+    public override void OnInitialize()
+    {
+      PlayerRoot.PlayerCollider.OnTriggerEnterAsObservable()
+        .Subscribe(OnCollide)
+        .AddTo(Disposables);
+    }
 
     public void OnCollide(Collider other)
     {
@@ -26,12 +31,9 @@ namespace _Scripts.Gameplay.Player.Services
       _points.Value += collectable.Points;
       collectable.Claim();
     }
-
-    public void Disable() => 
-      _enabled = false;
   }
 
-  public interface IPlayerCollector : IPlayerService
+  public interface IPlayerCollector
   {
     IReadOnlyReactiveProperty<int> Points { get; }
     void OnCollide(Collider other);

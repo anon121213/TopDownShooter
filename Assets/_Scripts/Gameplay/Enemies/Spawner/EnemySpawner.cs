@@ -1,49 +1,84 @@
 ﻿using System;
-using System.Collections.Generic;
 using _Scripts.Gameplay.Enemies.Base;
-using _Scripts.Gameplay.Enemies.Factory;
-using _Scripts.Infrastructure.Scopes;
+using _Scripts.Gameplay.Enemies.Data;
+using _Scripts.Infrastructure.Scopes.NetCore;
+using _Scripts.Infrastructure.Services.Data.DataProvider;
+using _Scripts.Infrastructure.Services.Network;
+using _Scripts.Infrastructure.Services.Pool;
+using UniRx;
 using UnityEngine;
+using VContainer.Unity;
+
 namespace _Scripts.Gameplay.Enemies.Spawner
 {
-  public class EnemySpawner : IEnemySpawner
+  public class EnemySpawner : IEnemySpawner, IInitializable, IDisposable
   {
-    private readonly List<Enemy> _enemies = new();
-    
-    private readonly IEnemyFactory _enemyFactory;
-    private readonly ArenaSceneView _arenaSceneView;
+    private readonly IObjectPool _pool;
+    private readonly IStaticDataProvider _staticDataProvider;
+    private readonly INetworkRoomModel _roomModel;
+    private readonly IActorNumberAllocator _actorNumberAllocator;
+    private readonly CompositeDisposable _disposables = new();
 
-    public EnemySpawner(IEnemyFactory enemyFactory, ArenaSceneView arenaSceneView)
-    {
-      _enemyFactory = enemyFactory;
-      _arenaSceneView = arenaSceneView;
-    }
+    private EnemiesConfig _enemiesConfig;
     
-    public List<SimpleEnemy> CreateSimpleEnemiesOnSpawnPoints()
+    public EnemySpawner(IObjectPool pool, IStaticDataProvider staticDataProvider, 
+      NetworkRoomModel roomModel, IActorNumberAllocator actorNumberAllocator)
     {
-      var enemies = new List<SimpleEnemy>();
-      
-      foreach (var data in _arenaSceneView.EnemySpawnData)
+      _pool = pool;
+      _staticDataProvider = staticDataProvider;
+      _roomModel = roomModel;
+      _actorNumberAllocator = actorNumberAllocator;
+    }
+
+    public void Initialize() => 
+      _enemiesConfig = _staticDataProvider.GetConfig<EnemiesConfig>();
+
+    public void SpawnEnemyByType(MobType enemyType, Vector3 spawnPoint, float startHealth)
+    {
+      if (!_roomModel.IsServer.Value)
+        return;
+
+      if (!_enemiesConfig.TryGetConfigByType(enemyType, out var config))
       {
-        if (data.spawnPoint == null)
-          continue;
-
-        SimpleEnemy enemy = _enemyFactory.CreateSimpleEnemy(data.spawnPoint.position, Quaternion.identity);
-        
-        enemy.SetPatrolPoints(data.patrolPoints);
-        enemy.Initialize();
-        _enemies.Add(enemy);
-        enemies.Add(enemy);
+        Debug.LogError($"Enemy {enemyType} not present in config");
+        return;
       }
-      
-      return enemies;
+
+      int actorNumber = _actorNumberAllocator.GetMobActorNumber();
+      _roomModel.AddDtoMob(new MobModelDataDTO(actorNumber, enemyType, config.BehaviourType, spawnPoint, startHealth));
     }
+
+    public void ReturnEnemy(Enemy enemy, MobType enemyType, float delay = 0, Action onReturn = null)
+    {
+      if (!enemy || !_enemiesConfig.TryGetConfigByType(enemyType, out var enemyConfig))
+        return;
+
+      if (delay > 0)
+      {
+        Observable.Timer(TimeSpan.FromSeconds(delay))
+          .Subscribe(_ => ReturnToPool(enemy, enemyConfig.Prefab.gameObject, onReturn))
+          .AddTo(_disposables);
+        return;
+      }
+
+      ReturnToPool(enemy, enemyConfig.Prefab.gameObject, onReturn);
+    }
+
+    private void ReturnToPool(Enemy enemy, GameObject prefab, Action onReturn = null)
+    {
+      enemy.DisableEnemy();
+      enemy.OnReturnToPool();
+      onReturn?.Invoke();
+      _pool.ReturnGameObject(enemy.gameObject, prefab);
+    }
+
+    public void Dispose() => 
+      _disposables.Dispose();
   }
 
-  [Serializable]
-  public class EnemySpawnData
+  public interface IEnemySpawner
   {
-    public Transform spawnPoint;
-    public List<Transform> patrolPoints;
+    void SpawnEnemyByType(MobType enemyType, Vector3 spawnPoint, float startHealth);
+    void ReturnEnemy(Enemy enemy, MobType enemyType, float delay = 0, Action onReturn = null);
   }
 }

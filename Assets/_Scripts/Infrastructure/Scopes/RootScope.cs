@@ -31,12 +31,11 @@ namespace _Scripts.Infrastructure.Scopes
       builder.Register<ISceneLoader, SceneLoader>(Lifetime.Singleton);
       builder.Register<IAssetProvider, AssetProvider>(Lifetime.Singleton);
       builder.Register<IStaticDataProvider, StaticDataProvider>(Lifetime.Singleton);
-      builder.Register<IWarmupService, WarmupService>(Lifetime.Singleton);
       builder.Register<IInputService, InputService>(Lifetime.Singleton);
       builder.Register<IObjectPool, ObjectPool>(Lifetime.Singleton);
       
       // FACTORIES
-      builder.Register<IEnemyFactory, EnemyFactory>(Lifetime.Singleton).As<IWarmupable>();
+      builder.Register<IEnemyAiFactory, EnemyAiFactory>(Lifetime.Singleton);
       builder.Register<ICollectableFactory, CollectableFactory>(Lifetime.Singleton).As<IWarmupable>();
       builder.Register<IProjectileFactory, ProjectileFactory>(Lifetime.Singleton);
       
@@ -44,7 +43,7 @@ namespace _Scripts.Infrastructure.Scopes
       builder.Register<IProjectileSpawner, ProjectileSpawner>(Lifetime.Singleton);
       builder.Register<ICollectableSpawner, CollectableSpawner>(Lifetime.Singleton);
       
-      builder.RegisterEntryPoint<MainBootstrapper>().AsSelf().WithParameter(_networkRoomScope);
+      builder.RegisterEntryPoint<MainBootstrapper>().WithParameter(_networkRoomScope);
     }
   }
 }

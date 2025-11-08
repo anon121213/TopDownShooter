@@ -34,9 +34,11 @@ namespace _Scripts.Gameplay.Projectiles
 
     private void OnTriggerEnter(Collider other)
     {
-      if (other.TryGetComponent(out IDamageable damageable))
-        damageable.TakeDamage(_damage);
+      /*if (other.TryGetComponent(out IDamageable damageable))
+        damageable.TakeDamage(_damage);*/
 
+      // TODO ADD DAMAGE
+      
       OnCollide?.Invoke(this);
       _isCollided = true;
     }

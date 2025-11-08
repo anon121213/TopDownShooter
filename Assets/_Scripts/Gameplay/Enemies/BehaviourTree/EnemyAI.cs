@@ -15,8 +15,14 @@ namespace _Scripts.Gameplay.Enemies.BehaviourTree
       _enemy = enemy;
     }
     
-    public void SetEnable(bool value) => 
+    public void SetEnable(bool value) {
       _isEnabled = value;
+
+      if (value)
+        _rootNode.OnEnable();
+      else
+        _rootNode.OnDisable();
+    }
 
     public void Execute()
     {
@@ -27,6 +33,6 @@ namespace _Scripts.Gameplay.Enemies.BehaviourTree
     }
 
     public void Dispose() => 
-      _rootNode.Dispose();
+      _rootNode.OnDispose();
   }
 }

@@ -42,10 +42,12 @@ namespace _Scripts.Gameplay.Projectiles
     {
       int count = Physics.OverlapSphereNonAlloc(transform.position, _radius, _results);
 
-      for (int i = 0; i < count; i++)
+      /*for (int i = 0; i < count; i++)
         if (_results[i].TryGetComponent(out IDamageable damageable))
-          damageable.TakeDamage(_damage);
+          damageable.TakeDamage(_damage);*/
 
+      // TODO ADD DAMAGE
+      
       OnCollide?.Invoke(this);
     }
   }

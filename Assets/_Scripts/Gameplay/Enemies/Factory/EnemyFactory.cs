@@ -1,91 +1,90 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using _Scripts.Gameplay.Enemies.Base;
-using _Scripts.Gameplay.Enemies.BehaviourTree;
-using _Scripts.Gameplay.Enemies.BehaviourTree.Nodes;
-using _Scripts.Gameplay.Enemies.BehaviourTree.Nodes.Base;
 using _Scripts.Gameplay.Enemies.Data;
 using _Scripts.Gameplay.Enemies.Services;
-using _Scripts.Infrastructure.Services.Data.AssetLoader;
 using _Scripts.Infrastructure.Services.Data.DataProvider;
+using _Scripts.Infrastructure.Services.Network;
 using _Scripts.Infrastructure.Services.Pool;
 using _Scripts.Infrastructure.Services.Warmup;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using VContainer;
+using UnityEngine.AddressableAssets;
 using VContainer.Unity;
+using VRShooter.Scopes;
 
 namespace _Scripts.Gameplay.Enemies.Factory
 {
-  public class EnemyFactory : IEnemyFactory
+  public class EnemyFactory : IEnemyFactory, IInitializable, IWarmupable
   {
+    private readonly IObjectPool _pool;
+    private readonly IEnemyAiFactory _enemyAiFactory;
+    private readonly INetworkDamageService _damageService;
     private readonly IStaticDataProvider _staticDataProvider;
-    private readonly IObjectResolver _objectResolver;
-    private readonly IObjectPool _objectPool;
 
-    private EnemyConfig _simpleEnemyConfig;
+    private EnemiesConfig _enemiesConfig;
     
-    public EnemyFactory(IStaticDataProvider staticDataProvider,
-      IObjectResolver objectResolver,
-      IObjectPool objectPool)
+    public EnemyFactory(IObjectPool objectPool, IEnemyAiFactory enemyAiFactory, 
+      INetworkDamageService damageService, IStaticDataProvider staticDataProvider)
     {
+      _pool = objectPool;
+      _enemyAiFactory = enemyAiFactory;
+      _damageService = damageService;
       _staticDataProvider = staticDataProvider;
-      _objectResolver = objectResolver;
-      _objectPool = objectPool;
+    }
+
+    public void Initialize()
+    {
+      _enemiesConfig = _staticDataProvider.GetConfig<EnemiesConfig>();
     }
 
     public UniTask Warmup(CancellationToken ct)
     {
-      // TODO MAKE ENEMIES POOL
-      _simpleEnemyConfig = _staticDataProvider.GetConfig<EnemyConfig>();
+      foreach (var data in _enemiesConfig.EnemyData) 
+        _pool.Warmup(data.Prefab.gameObject, Vector3.zero); 
+      
       return UniTask.CompletedTask;
     }
 
-    public SimpleEnemy CreateSimpleEnemy(Vector3 at, Quaternion look)
+    public Enemy CreateEnemyByType(MobType enemyType, Vector3 at, Quaternion look, Transform parent = null)
     {
-      SimpleEnemy enemy = (SimpleEnemy)_objectResolver.Instantiate(_simpleEnemyConfig.Prefab, at, look);
-      IEnemyMover enemyMover = new EnemyMover(enemy.NavMeshAgent, _simpleEnemyConfig);
-      
-      enemy.Construct(_simpleEnemyConfig, enemyMover);
-      enemy.SetAI(CreateSimpleEnemyAI(enemy));
-      enemy.EnableEnemy();
-      return enemy;
+      if (!_enemiesConfig.TryGetConfigByType(enemyType, out var config))
+        throw new InvalidKeyException($"Cannot find enemy config by type {enemyType}");
+
+      var enemyObj = _pool.GetGameObject(config.Prefab, at, look, parent);
+      return InitEnemyAiByType(enemyObj, config);
     }
 
-    public void ReturnEnemyToPool(Enemy enemy, Enemy prefab) => 
-      _objectPool.ReturnGameObject(enemy, prefab);
-
-    private EnemyAI CreateSimpleEnemyAI(SimpleEnemy enemy)
+    private Enemy InitEnemyAiByType(Enemy enemy, EnemyData config)
     {
-      var root = new SelectorNode();
-    
-      var attackSequence = new SequenceNode();
-      attackSequence.AddChild(new AttackNode(enemy));
-      attackSequence.AddChild(new AttackDelayNode(enemy));
+      switch (config.BehaviourType)
+      {
+        case MobBehaviourTypes.None:
+          return enemy;
 
-      var chaseSequence = new SequenceNode();
-      chaseSequence.AddChild(new CheckTargetInRangeDelayNode(enemy));
-      chaseSequence.AddChild(new CheckTargetInRange(enemy));
-      chaseSequence.AddChild(new MoveToPlayer(enemy));
+        case MobBehaviourTypes.PlayerChase:
+          if (!enemy.TryGetComponent(out SimpleEnemy simpleEnemy))
+          {
+            Debug.LogError($"Enemy prefab {config.MobType} has no component SimpleEnemy");
+            return enemy.GetComponent<Enemy>();
+          }
 
-      var patrolSequence = new SequenceNode();
-      patrolSequence.AddChild(new MoveToWaypoint(enemy));
-      patrolSequence.AddChild(new WaitAtWaypoint(enemy));
+          var enemyMover = new EnemyMover(simpleEnemy, config);
+          var enemyAttacker = new EnemyAttacker(simpleEnemy, _damageService, config.DamageLayer);
+          var enemyTargetSetter = new EnemyTargetSetter(simpleEnemy, simpleEnemy);
 
-      root.AddChild(attackSequence);
-      root.AddChild(chaseSequence);  
-      root.AddChild(patrolSequence); 
-
-      EnemyAI enemyAI = new EnemyAI(enemy, root);
-      enemyAI.SetEnable(true);
-
-      return enemyAI;
+          simpleEnemy.Construct(config, enemyMover, enemyAttacker, enemyTargetSetter);
+          simpleEnemy.SetAI(_enemyAiFactory.CreateSimpleEnemyAI(simpleEnemy));
+          simpleEnemy.OnGetFromPool();
+          return simpleEnemy;
+        default:
+          Debug.LogError($"Enemy by type {config.BehaviourType} does not exist");
+          return null;
+      }
     }
   }
 
-  public interface IEnemyFactory : IWarmupable
+  public interface IEnemyFactory
   {
-    SimpleEnemy CreateSimpleEnemy(Vector3 at, Quaternion look);
-    void ReturnEnemyToPool(Enemy enemy, Enemy prefab);
+    Enemy CreateEnemyByType(MobType enemyType, Vector3 at, Quaternion look, Transform parent = null);
   }
 }

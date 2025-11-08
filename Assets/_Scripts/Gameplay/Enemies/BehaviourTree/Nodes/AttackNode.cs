@@ -1,34 +1,35 @@
 ﻿using _Scripts.Gameplay.Enemies.Base;
 using _Scripts.Gameplay.Enemies.BehaviourTree.Nodes.Base;
-using _Scripts.Gameplay.health;
 using UnityEngine;
 
 namespace _Scripts.Gameplay.Enemies.BehaviourTree.Nodes
 {
-  public class AttackNode : BehaviorNode
-  {
-    private readonly IAttackeableEnemy _attackeableEnemy;
-    private readonly Collider[] _results = new Collider[30];
+  public class AttackNode : BehaviorNode {
+    private readonly IAttackableEnemy _attackableEnemy;
 
-    public AttackNode(IAttackeableEnemy attackeableEnemy) =>
-      _attackeableEnemy = attackeableEnemy;
+    public AttackNode(IAttackableEnemy attackableEnemy) =>
+      _attackableEnemy = attackableEnemy;
 
-    public override NodeStatus Execute(Enemy enemy)
-    {
-      int count = Physics.OverlapSphereNonAlloc(enemy.transform.position, _attackeableEnemy.AttackRadius, _results);
-
-      if (count > 0)
-      {
-        for (int i = 0; i < count; i++)
-          if (_results[i].TryGetComponent(out IDamageable damageable) && _results[i].transform != enemy.transform)
-          {
-            damageable.TakeDamage(_attackeableEnemy.Damage);
-            return NodeStatus.Success;
-          }
+    public override NodeStatus Execute(Enemy enemy) {
+      _attackableEnemy.TargetSetter.TrySetTarget();
+            
+      if (!_attackableEnemy.CurrentTarget.Value) {
+        _attackableEnemy.SetAttacking(false);
+        return NodeStatus.Failure;
+      }
+            
+      var distance = Vector3.Distance(_attackableEnemy.CurrentTarget.Value.position, enemy.transform.position);
+      if (distance > enemy.Config.AttackRadius) {
+        _attackableEnemy.SetAttacking(false);
+        return NodeStatus.Failure;
       }
 
-      for (int i = 0; i < count; i++)
-        _results[i] = null;
+      if (_attackableEnemy.Attacker.TryAttack(enemy, _attackableEnemy.AttackPoint) && _attackableEnemy.CurrentTarget.Value) {
+        _attackableEnemy.SetAttacking(true);
+        return NodeStatus.Success;
+      }
+
+      _attackableEnemy.SetAttacking(false);
       return NodeStatus.Failure;
     }
   }

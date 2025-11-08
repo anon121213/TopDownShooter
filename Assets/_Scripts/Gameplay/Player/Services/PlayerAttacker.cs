@@ -1,21 +1,17 @@
 ﻿using System;
 using _Scripts.Gameplay.Items.Weapons;
+using _Scripts.Gameplay.Player.Services.Base;
 using Cysharp.Threading.Tasks;
 using UniRx;
 
 namespace _Scripts.Gameplay.Player.Services
 {
-  public class PlayerAttacker : IPlayerAttacker
+  public class PlayerAttacker : PlayerService, IPlayerAttacker
   {
     private readonly ReactiveProperty<IWeapon> _currentWeapon = new();
     public IReadOnlyReactiveProperty<IWeapon> CurrentWeapon => _currentWeapon;
 
     public event Action OnAttack;
-
-    private bool _isCanAttack;
-
-    public void Enable() => 
-      _isCanAttack = true;
 
     public void SwitchWeapon(IWeapon weapon)
     {
@@ -25,7 +21,7 @@ namespace _Scripts.Gameplay.Player.Services
 
     public bool TryAttack()
     {
-      if (!_isCanAttack)
+      if (!IsEnable)
         return false;
 
       if (!_currentWeapon.Value.TryAttack()) 
@@ -34,9 +30,5 @@ namespace _Scripts.Gameplay.Player.Services
       OnAttack?.Invoke();
       return true;
     }
-
-
-    public void Disable() => 
-      _isCanAttack = false;
   }
 }

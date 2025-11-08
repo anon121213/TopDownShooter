@@ -1,5 +1,4 @@
 ﻿using System;
-using _Scripts.Infrastructure.NetCore;
 using _Scripts.Infrastructure.Scopes.Game;
 using _Scripts.Infrastructure.Services.Data.DataProvider;
 using FishNet.Connection;
@@ -17,21 +16,18 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
     private readonly NetworkManager _networkManager;
     private readonly GameScope _gameScope;
     private readonly INetworkRoomModel _networkRoomModel;
-    private readonly INetworkSyncService _syncService;
-
+      
     public NetworkRoomService(NetworkRoomScope networkScope,
       IStaticDataProvider staticDataProvider,
       NetworkManager networkManager,
       GameScope gameScope,
-      INetworkRoomModel networkRoomModel,
-      INetworkSyncService syncService)
+      INetworkRoomModel networkRoomModel)
     {
       _networkScope = networkScope;
       _staticDataProvider = staticDataProvider;
       _networkManager = networkManager;
       _gameScope = gameScope;
       _networkRoomModel = networkRoomModel;
-      _syncService = syncService;
     }
 
     public void Initialize()
@@ -52,7 +48,6 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
           break;
       }
 #endif
-      Debug.LogError(_networkRoomModel.InstanceTag);
     }
 
     private void StartHost()
@@ -61,15 +56,12 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
       _networkManager.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
       _networkManager.ServerManager.StartConnection();
       _networkManager.ClientManager.StartConnection();
-      _networkRoomModel.SetIsServer(true);
     }
 
     private void ConnectToServer()
     {
       _networkManager.ClientManager.OnClientConnectionState += OnClientConnectionState;
       _networkManager.ClientManager.StartConnection();
-      _networkRoomModel.SetIsServer(false);
-      _networkRoomModel.SetId(0);
     }
 
     private void OnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs state)
@@ -77,21 +69,26 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
       switch (state.ConnectionState)
       {
         case RemoteConnectionState.Started:
-          _syncService.AddClient(connection.ClientId);
+          _networkRoomModel.AddClient(connection.ClientId);
           break;
 
         case RemoteConnectionState.Stopped:
-          _syncService.RemoveClient(connection.ClientId);
+          _networkRoomModel.RemoveClient(connection.ClientId);
           break;
       }
     }
 
     private void OnServerConnectionState(ServerConnectionStateArgs obj)
     {
+      if (obj.ConnectionState != LocalConnectionState.Started) 
+        return;
+      
       _networkRoomModel.SetConnectionState(obj.ConnectionState);
+      _networkManager.ServerManager.Spawn((NetworkRoomModel)_networkRoomModel);
 
-      if (obj.ConnectionState == LocalConnectionState.Started)
-        _networkScope.CreateChildFromPrefab(_gameScope);
+      _networkRoomModel.SetIsServer(true);
+      _networkRoomModel.SetId(0);
+      _networkScope.CreateChildFromPrefab(_gameScope);
     }
 
     private void OnClientConnectionState(ClientConnectionStateArgs obj)
@@ -100,6 +97,7 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
 
       if (obj.ConnectionState == LocalConnectionState.Started)
       {
+        _networkRoomModel.SetIsServer(false);
         _networkRoomModel.SetId(_networkManager.ClientManager.Connection.ClientId);
         _networkScope.CreateChildFromPrefab(_gameScope);
       }

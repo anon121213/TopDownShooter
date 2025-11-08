@@ -1,78 +1,138 @@
-﻿using System.Collections.Generic;
-using _Scripts.Gameplay.Collectables.Data;
-using _Scripts.Gameplay.Collectables.Spawner;
+﻿using System.Linq;
 using _Scripts.Gameplay.Enemies.Base;
 using _Scripts.Gameplay.Enemies.Data;
 using _Scripts.Gameplay.Enemies.Services;
+using UniRx;
 using UnityEngine;
-using VContainer;
+using VRShooter.Scopes;
 
 namespace _Scripts.Gameplay.Enemies
 {
-  public class SimpleEnemy : Enemy, IMoveToPlayerEnemy, IPointMoveableEnemy, IAttackeableEnemy
+  public class SimpleEnemy : Enemy, IChasingEnemy, IAttackableEnemy, IPlayerTargetableEnemy
   {
-    private ICollectableSpawner _collectableSpawner;
-    
-    public List<Transform> PatrolPoints { get; private set; } = new();
-    public int CurrentPatrolIndex { get; set; }
-    public Transform Target { get; set; }
-    public float CheckTargetRadius { get; private set; }
-    public float CheckTargetDelay { get; private set; }
-    public float Speed { get; private set; }
-    public float WaitTime { get; private set; }
+    [field: SerializeField] public Transform AttackPoint { get; private set; }
+
+    private readonly ReactiveCollection<Transform> _targets = new ReactiveCollection<Transform>();
+    private readonly ReactiveProperty<Transform> _currentTarget = new ReactiveProperty<Transform>();
+    private readonly ReactiveProperty<bool> _isChasing = new ReactiveProperty<bool>();
+    private readonly ReactiveProperty<bool> _isAttacking = new ReactiveProperty<bool>();
+
     public float Damage { get; private set; }
     public float AttackRadius { get; private set; }
     public float AttackDelay { get; private set; }
     public float StartHealth { get; private set; }
-    public IEnemyMover Mover { get; private set; }
+    public float StoppingDistance { get; private set; }
+    public int MaxComboCount { get; private set; }
 
-    [Inject]
-    private void Inject(ICollectableSpawner collectableSpawner)
+    public IEnemyMover Mover { get; private set; }
+    public IEnemyAttacker Attacker { private set; get; }
+    public IEnemyTargetSetter TargetSetter { private set; get; }
+
+    public IReadOnlyReactiveProperty<bool> IsChasing => _isChasing;
+    public IReadOnlyReactiveProperty<bool> IsAttacking => _isAttacking;
+    public IReadOnlyReactiveCollection<Transform> Targets => _targets;
+    public IReadOnlyReactiveProperty<Transform> CurrentTarget => _currentTarget;
+
+    public void Construct(EnemyData config, IEnemyMover enemyMover, IEnemyAttacker enemyAttacker,
+      IEnemyTargetSetter enemyTargetSetter)
     {
-      _collectableSpawner = collectableSpawner;
-    }
-    
-    public void Construct(EnemyConfig config, IEnemyMover enemyMover)
-    {
-      CheckTargetRadius = config.CheckTargetRadius;
-      CheckTargetDelay = config.CheckTargetDelay;
-      Speed = config.Speed;
-      WaitTime = config.WaitPatrolTime;
       Mover = enemyMover;
+      Attacker = enemyAttacker;
+      TargetSetter = enemyTargetSetter;
       Damage = config.Damage;
       AttackDelay = config.AttackDelay;
       AttackRadius = config.AttackRadius;
       StartHealth = config.StartHealth;
+      StoppingDistance = config.StoppingDistance;
+      MaxComboCount = config.MaxComboCount;
     }
 
-    public void Initialize()
+    protected override void OnSetContext(Context context)
     {
-      Health.OnHealthOver += Died;
-      Health.Construct(StartHealth);
+      base.OnSetContext(context);
+      MobModel.IsDead.Subscribe(isDead =>
+      {
+        if (isDead)
+        {
+          DisableEnemy();
+        }
+      }).AddTo(ViewDisposables);
     }
 
-    private void Died()
+    public void TryAddTarget(Transform target)
     {
-      DisableEnemy();
-      Health.OnHealthOver -= Died;
-      Destroy(gameObject);
-      _collectableSpawner.SpawnCollectable(CollectableType.Coin, transform.position, Quaternion.identity, default); // TODO MAKE CTS
+      if (!Targets.Contains(target) && target)
+        _targets.Add(target);
     }
 
-    public void SetPatrolPoints(List<Transform> patrolPoints) => 
-      PatrolPoints = patrolPoints;
-
-    private void Update()
+    public void TryRemoveTarget(Transform target)
     {
-      if (!Enabled)
+      if (!Targets.Contains(target) && target)
         return;
-      
-      EnemyAI?.Execute();
+
+      if (target == _currentTarget.Value)
+      {
+        SetCurrentTarget(null);
+      }
+
+      _targets.Remove(target);
     }
 
-    private void OnDisable()
+    public void ResetTargets() =>
+      _targets?.Clear();
+
+    public void SetCurrentTarget(Transform target)
     {
-      Health.OnHealthOver -= Died;
+      _currentTarget.Value = target;
+
+      if (target)
+        return;
+
+      _isChasing.Value = false;
+      _isAttacking.Value = false;
+    }
+
+    public void SetChasing(bool isChasing)
+    {
+      _isChasing.Value = isChasing;
+
+      if (isChasing)
+        _isAttacking.Value = false;
+    }
+
+    public void SetAttacking(bool isAttacking)
+    {
+      _isAttacking.Value = isAttacking;
+
+      if (isAttacking)
+        _isChasing.Value = false;
+    }
+
+    public override void OnGetFromPool()
+    {
+      base.OnGetFromPool();
+      _targets.Clear();
+      SetCurrentTarget(null);
+      _isChasing.Value = false;
+    }
+
+    public override void OnReturnToPool()
+    {
+      base.OnReturnToPool();
+      _targets.Clear();
+    }
+
+    public override void DisableEnemy()
+    {
+      base.DisableEnemy();
+      _isChasing.Value = false;
+      _isAttacking.Value = false;
+    }
+
+    protected override void OnDestroy()
+    {
+      base.OnDestroy();
+      Attacker?.Dispose();
     }
   }
 }

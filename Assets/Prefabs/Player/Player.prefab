@@ -121,9 +121,7 @@ GameObject:
   - component: {fileID: 863491999879018980}
   - component: {fileID: 4196545615853538381}
   - component: {fileID: 7612223901117100288}
-  - component: {fileID: 6966918598668259104}
-  - component: {fileID: 2409801329170015813}
-  - component: {fileID: 2274372340966174598}
+  - component: {fileID: 5858626436280071016}
   - component: {fileID: 2559181828471680268}
   - component: {fileID: 7070032187209151036}
   m_Layer: 0
@@ -186,11 +184,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a25977d31774643984e6c1cb3f8d867, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  <PlayerScope>k__BackingField: {fileID: 2409801329170015813}
   <CharacterController>k__BackingField: {fileID: 4196545615853538381}
-  <Health>k__BackingField: {fileID: 6966918598668259104}
   <PlayerCollider>k__BackingField: {fileID: 4019349983017587240}
---- !u!114 &6966918598668259104
+  <PlayerModel>k__BackingField: {fileID: 5858626436280071016}
+--- !u!114 &5858626436280071016
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -199,37 +196,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7703403518073095188}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f29cd8a8078e4e26a6acb6f5d87e1d09, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &2409801329170015813
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7703403518073095188}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3da4c29d05fa4b53816fb2f5c92339a7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  parentReference:
-    TypeName: 
-  autoRun: 1
-  autoInjectGameObjects: []
-  _player: {fileID: 7612223901117100288}
-  _playerSyncService: {fileID: 2274372340966174598}
---- !u!114 &2274372340966174598
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7703403518073095188}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d999be8eea6d4a819734b493daab3887, type: 3}
+  m_Script: {fileID: 11500000, guid: 82fd8d25bb4343d8924d00aa72b7773b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _componentIndexCache: 0
@@ -254,7 +221,7 @@ MonoBehaviour:
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
-  - {fileID: 2274372340966174598}
+  - {fileID: 5858626436280071016}
   - {fileID: 7070032187209151036}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
@@ -280,7 +247,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 1
+  <PrefabId>k__BackingField: 2
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 5306845881338098766
   <SceneId>k__BackingField: 0

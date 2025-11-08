@@ -7,9 +7,8 @@ using UnityEngine;
 
 namespace _Scripts.Gameplay.Player.Services
 {
-  public class PlayerMover : IPlayerMover, IUpdatable, IInitializable
+  public class PlayerMover : PlayerService, IPlayerMover
   {
-    private readonly PlayerView _playerView;
     private readonly IInputService _inputService;
     private readonly IStaticDataProvider _staticDataProvider;
     private CharacterController _characterController;
@@ -18,28 +17,28 @@ namespace _Scripts.Gameplay.Player.Services
     private readonly ReactiveProperty<bool> _isMoving = new();
     public IReadOnlyReactiveProperty<bool> IsMoving => _isMoving;
 
-    public PlayerMover(PlayerView playerView,
-      IInputService inputService,
+    public PlayerMover(IInputService inputService,
       IStaticDataProvider staticDataProvider)
     {
-      _playerView = playerView;
       _inputService = inputService;
       _staticDataProvider = staticDataProvider;
     }
 
-    public void Initialize()
+    public override void OnInitialize()
     {
-      _characterController = _playerView.CharacterController;
+      _characterController = PlayerRoot.CharacterController;
       _speed = _staticDataProvider.GetConfig<PlayerConfig>().MoveSpeed;
     }
 
-    public void Enable()
+
+    public override void OnEnable()
     {
+      base.OnEnable();
       _inputService.OnStartMove += StartMove;
       _inputService.OnStopMove += StopMove;
     }
 
-    public void OnUpdate() => 
+    public override void OnUpdate() => 
       Move();
 
     private void Move()
@@ -47,17 +46,17 @@ namespace _Scripts.Gameplay.Player.Services
       if (!IsMoving.Value)
         return;
 
-      Vector3 direction = new Vector3(_inputService.MoveDirection.x, 0, _inputService.MoveDirection.y);
+      var direction = new Vector3(_inputService.MoveDirection.x, 0, _inputService.MoveDirection.y);
       _characterController.Move(direction * _speed);
     }
 
     private void StopMove() =>
       _isMoving.Value = false;
 
-    private void StartMove() =>
+    private void StartMove() => 
       _isMoving.Value = true;
 
-    public void Disable()
+    public override void OnDisable()
     {
       _inputService.OnStartMove -= StartMove;
       _inputService.OnStopMove -= StopMove;
@@ -65,7 +64,7 @@ namespace _Scripts.Gameplay.Player.Services
     }
   }
 
-  public interface IPlayerMover : IPlayerService
+  public interface IPlayerMover
   {
     IReadOnlyReactiveProperty<bool> IsMoving { get; }
   }

@@ -1,98 +1,278 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using _Scripts.Gameplay.Enemies;
 using _Scripts.Gameplay.Player;
+using FishNet.Object;
 using FishNet.Transporting;
 using UniRx;
 using UnityEngine;
 
 namespace _Scripts.Infrastructure.Scopes.NetCore
 {
-  public class NetworkRoomModel : INetworkRoomModel
+  public class NetworkRoomModel : NetworkBehaviour, INetworkRoomModel
   {
     private readonly ReactiveProperty<int> _clientId = new();
     private readonly ReactiveProperty<LocalConnectionState> _connectionState = new();
     private readonly ReactiveProperty<bool> _isServer = new();
-    private readonly ReactiveDictionary<int, IReadOnlyPlayerModel> _players = new();
-    private readonly ReactiveDictionary<int, IPlayerModel> _playersRoot = new();
     private readonly ReactiveCollection<int> _clients = new();
+    
+    private readonly ReactiveDictionary<int, PlayerStateDTO> _playersDto = new();
+    private readonly ReactiveDictionary<int, IPlayerModel> _playersRoot = new();
+    private readonly ReactiveDictionary<int, IReadOnlyPlayerModel> _players = new();
+    
+    private readonly ReactiveDictionary<int, MobModelDataDTO> _mobsDto = new();
+    private readonly ReactiveDictionary<int, IMobModel> _mobsRoot = new();
+    private readonly ReactiveDictionary<int, IReadOnlyMobModel> _mobs = new();
 
+    private readonly ReactiveProperty<bool> _isMobSpawnStarted = new();
+
+    // READ-ONLY EXPOSE
     public IReadOnlyReactiveProperty<int> ClientId => _clientId;
     public IReadOnlyReactiveProperty<LocalConnectionState> ConnectionState => _connectionState;
-    public IReadOnlyReactiveProperty<bool> IsServer => _isServer;
-    public IReadOnlyReactiveDictionary<int, IReadOnlyPlayerModel> Players => _players;
-    public IReadOnlyReactiveDictionary<int, IPlayerModel> PlayersRoot => _playersRoot;
+    public new IReadOnlyReactiveProperty<bool> IsServer => _isServer;
     public IReadOnlyReactiveCollection<int> Clients => _clients;
+    public IReadOnlyReactiveProperty<bool> IsMobSpawnStarted => _isMobSpawnStarted;
 
-    public void SetId(int id) =>
+    public IReadOnlyReactiveDictionary<int, PlayerStateDTO> PlayersDto => _playersDto;
+    public IReadOnlyReactiveDictionary<int, MobModelDataDTO> MobsDto => _mobsDto;
+    public IReadOnlyReactiveDictionary<int, IReadOnlyPlayerModel> Players => _players;
+    public IReadOnlyReactiveDictionary<int, IReadOnlyMobModel> Mobs => _mobs;
+
+    public IReadOnlyReactiveDictionary<int, IPlayerModel> PlayersRoot => _playersRoot;
+    public IReadOnlyReactiveDictionary<int, IMobModel> MobsRoot => _mobsRoot;
+
+
+    // ---------------- SERVER WRITE API ----------------
+
+    public void SetId(int id) => 
       _clientId.Value = id;
 
-    public void AddPlayer(int playerId, IPlayerModel playerEntryPoint)
-    {
-      if (_players.TryAdd(playerId, playerEntryPoint))
-        return;
-      
-      Debug.LogError($"Player with Id {playerId} already exists!");
-    }
+    public void SetIsServer(bool isServer) => 
+      _isServer.Value = isServer;
 
-    public void RemovePlayer(int playerId)
+    public void SetConnectionState(LocalConnectionState state)
     {
-      if (!_players.Remove(playerId))
-        return;
-      
-      Debug.LogError($"Player with Id {playerId} does not exist!");
+      if (!IsServerStarted) return;
+      _connectionState.Value = state;
+      RpcSetConnectionState(state);
     }
 
     public void AddClient(int clientId)
     {
+      if (!IsServerStarted) return;
+
       if (_clients.Contains(clientId))
       {
-        Debug.LogError($"Client with Id {clientId} already exists!");
+        Debug.LogError($"[ROOM] DUPLICATE CLIENT ID: {clientId}");
         return;
       }
-      
+
       _clients.Add(clientId);
+      RpcAddClient(clientId);
     }
 
     public void RemoveClient(int clientId)
     {
+      if (!IsServerStarted) return;
+
       if (!_clients.Contains(clientId))
       {
-        Debug.LogError($"Client with Id {clientId} does not exist!");
+        Debug.LogError($"[ROOM] REMOVE CLIENT FAILED: ID {clientId} NOT FOUND");
         return;
       }
-      
+
       _clients.Remove(clientId);
+      RpcRemoveClient(clientId);
+    }
+    
+    
+    //-------------------PLAYERS------------------//
+
+
+    public void AddDtoPlayer(PlayerStateDTO dto)
+    {
+      if (!IsServerStarted) return;
+
+      if (!_playersDto.TryAdd(dto.ActorNumber, dto))
+      {
+        Debug.LogError($"[ROOM] DUPLICATE PLAYER DTO: Actor={dto.ActorNumber}");
+        return;
+      }
+
+      RpcAddDtoPlayer(dto.ActorNumber, dto);
     }
 
-    public void SetIsServer(bool isServer) =>
-      _isServer.Value = isServer;
+    public void RemoveDtoPlayer(int actorNumber)
+    {
+      if (!IsServerStarted) return;
 
-    public void SetConnectionState(LocalConnectionState connectionState) =>
-      _connectionState.Value = connectionState;
+      if (!_playersDto.Remove(actorNumber))
+        Debug.LogError($"[ROOM] REMOVE DTO FAILED: Actor={actorNumber}");
+
+      RpcRemoveDtoPlayer(actorNumber);
+    }
+
     
-    public string InstanceTag { get; } = Guid.NewGuid().ToString("N");
-  }
+    // INVOKES ONLY LOCAL
+    public void AddPlayerLocal(IPlayerModel model)
+    {
+      if (!IsServerStarted) return;
 
+      int id = model.ActorNumber.Value;
+
+      if (!_players.TryAdd(id, model))
+      {
+        Debug.LogError($"[ROOM] DUPLICATE PLAYER MODEL: Actor={id}");
+        return;
+      }
+
+      _playersRoot[id] = model;
+    }
+
+    public void RemovePlayer(int playerId)
+    {
+      if (!IsServerStarted) return;
+
+      bool existed = false;
+
+      existed |= _players.Remove(playerId);
+      existed |= _playersRoot.Remove(playerId);
+      existed |= _playersDto.Remove(playerId);
+
+      if (!existed)
+        Debug.LogError($"[ROOM] REMOVE PLAYER FAILED: Actor={playerId}");
+
+      RpcRemovePlayer(playerId);
+    }
+
+    
+    //-------------------MOBS-------------------//
+
+    
+    public void AddDtoMob(MobModelDataDTO data)
+    {
+      if (!IsServerStarted) return;
+
+      if (!_mobsDto.TryAdd(data.ActorNumber, data))
+      {
+        Debug.LogError($"[ROOM] DUPLICATE MOB DTO: Actor={data.ActorNumber}");
+        return;
+      }
+
+      RpcAddDtoMob(data.ActorNumber, data);
+    }
+
+    public void RemoveDtoMob(int actorNumber)
+    {
+      if (!IsServerStarted) return;
+
+      if (!_mobsDto.Remove(actorNumber))
+        Debug.LogError($"[ROOM] REMOVE DTO FAILED: Actor={actorNumber}");
+
+      RpcRemoveDtoPlayer(actorNumber);
+    }
+
+    // INVOKES ONLY LOCAL
+    public void AddMobLocal(IMobModel model)
+    {
+      if (!IsServerStarted) return;
+
+      if (!_mobs.TryAdd(model.ActorNumber.Value, model))
+      {
+        Debug.LogError($"[ROOM] DUPLICATE MOB: Actor={model.ActorNumber.Value}");
+        return;
+      }
+
+      _mobsRoot[model.ActorNumber.Value] = model;
+    }
+
+    public void RemoveMob(int actorNumber)
+    {
+      if (!IsServerStarted) return;
+
+      bool existed = false;
+
+      existed |= _mobs.Remove(actorNumber);
+      existed |= _mobsRoot.Remove(actorNumber);
+
+      if (!existed)
+        Debug.LogError($"[ROOM] REMOVE MOB FAILED: Actor={actorNumber}");
+
+      RpcRemoveMob(actorNumber);
+    }
+
+    public void SetIsMobSpawnStarted(bool v)
+    {
+      if (!IsServerStarted) return;
+      _isMobSpawnStarted.Value = v;
+      RpcSetIsMobSpawnStarted(v);
+    }
+
+
+    // ---------------- RPC SYNC ----------------
+
+    [ObserversRpc] private void RpcSetConnectionState(LocalConnectionState v) => _connectionState.Value = v;
+
+    [ObserversRpc] private void RpcAddClient(int id) => _clients.Add(id);
+    [ObserversRpc] private void RpcRemoveClient(int id) => _clients.Remove(id);
+
+    [ObserversRpc] private void RpcAddDtoPlayer(int id, PlayerStateDTO dto) => _playersDto[id] = dto;
+    [ObserversRpc] private void RpcRemoveDtoPlayer(int id) => _playersDto.Remove(id);
+    
+    [ObserversRpc] private void RpcAddDtoMob(int id, MobModelDataDTO dto) => _mobsDto[id] = dto;
+    [ObserversRpc] private void RpcRemoveDtoMob(int id) => _mobsDto.Remove(id);
+
+    [ObserversRpc] private void RpcRemovePlayer(int id)
+    {
+      _players.Remove(id);
+      _playersRoot.Remove(id);
+      _playersDto.Remove(id);
+    }
+
+    [ObserversRpc] private void RpcRemoveMob(int id)
+    {
+      _mobs.Remove(id);
+      _mobsRoot.Remove(id);
+    }
+
+    [ObserversRpc] private void RpcSetIsMobSpawnStarted(bool v) => _isMobSpawnStarted.Value = v;
+  }
+  
   public interface INetworkRoomModel : IReadOnlyNetworkRoomModel
   {
-    IReadOnlyReactiveDictionary<int, IPlayerModel> PlayersRoot { get; }
-
     void SetId(int id);
-    void AddPlayer(int playerId, IPlayerModel playerEntryPoint);
-    void RemovePlayer(int playerId);
+    void SetIsServer(bool isServer);
     void AddClient(int clientId);
     void RemoveClient(int clientId);
-    void SetIsServer(bool isServer);
     void SetConnectionState(LocalConnectionState connectionState);
+
+    void AddDtoPlayer(PlayerStateDTO data);
+    void AddPlayerLocal(IPlayerModel playerModel);
+    void RemoveDtoPlayer(int actorNumber);
+    void RemovePlayer(int playerId);
+    
+    void AddDtoMob(MobModelDataDTO data);
+    void AddMobLocal(IMobModel model);
+    void RemoveDtoMob(int actorNumber);
+    void RemoveMob(int actorNumber);
+    
+    void SetIsMobSpawnStarted(bool isMobSpawnStarted);
   }
   
   public interface IReadOnlyNetworkRoomModel
   {
-    string InstanceTag { get; }
     IReadOnlyReactiveProperty<int> ClientId { get; }
     IReadOnlyReactiveProperty<LocalConnectionState> ConnectionState { get; }
     IReadOnlyReactiveProperty<bool> IsServer { get; }
-    IReadOnlyReactiveDictionary<int, IReadOnlyPlayerModel> Players { get; }
     IReadOnlyReactiveCollection<int> Clients { get; }
+    IReadOnlyReactiveProperty<bool> IsMobSpawnStarted { get; }
+
+    IReadOnlyReactiveDictionary<int, PlayerStateDTO> PlayersDto { get; }
+    IReadOnlyReactiveDictionary<int, MobModelDataDTO> MobsDto { get; }
+    
+    IReadOnlyReactiveDictionary<int, IReadOnlyPlayerModel> Players { get; }
+    IReadOnlyReactiveDictionary<int, IReadOnlyMobModel> Mobs { get; }
+    
+    IReadOnlyReactiveDictionary<int, IPlayerModel> PlayersRoot { get; }
+    IReadOnlyReactiveDictionary<int, IMobModel> MobsRoot { get; }
   }
 }

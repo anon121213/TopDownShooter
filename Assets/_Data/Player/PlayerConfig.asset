@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53bdb8362bdd4fb8b735b563d9cdbc26, type: 3}
   m_Name: PlayerConfig
   m_EditorClassIdentifier: 
+  <PlayerScope>k__BackingField: {fileID: 8438844169746950877, guid: 5d6dc2c3d3a0f07408168cbb82cb7211, type: 3}
   <Prefab>k__BackingField: {fileID: 7612223901117100288, guid: 94ab5aff95878ca46b78925f34fb1a43, type: 3}
-  <HealthConfig>k__BackingField: {fileID: 11400000, guid: 5706db1f1c2bc0b40a2ac16af1d50749, type: 2}
+  <InitHealth>k__BackingField: 100
   <SpawnPosition>k__BackingField: {x: 0, y: 1, z: 0}
   <MoveSpeed>k__BackingField: 0.05

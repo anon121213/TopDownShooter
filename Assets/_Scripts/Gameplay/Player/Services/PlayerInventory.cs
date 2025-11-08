@@ -1,12 +1,10 @@
-﻿using System.Linq;
-using _Scripts.Gameplay.Items.Weapons;
+﻿using _Scripts.Gameplay.Items.Weapons;
 using _Scripts.Gameplay.Player.Services.Base;
 using _Scripts.Infrastructure.Services.Input;
-using UnityEngine;
 
 namespace _Scripts.Gameplay.Player.Services
 {
-  public class PlayerInventory : IPlayerService
+  public class PlayerInventory : PlayerService
   {
     private readonly IInputService _inputService;
     private readonly IPlayerBackpack _playerBackpack;
@@ -23,13 +21,14 @@ namespace _Scripts.Gameplay.Player.Services
       _playerAttacker = playerAttacker;
     }
 
-    public void Enable()
-    {
+    public override void OnInitialize() => 
       _inputService.OnChangeWeapon += TrySetWeapon;
-    }
 
     private void TrySetWeapon()
     {
+      if (!IsEnable)
+        return;
+      
       int itemCount = _playerBackpack.Items.Count;
       if (itemCount == 0) return;
 
@@ -53,7 +52,7 @@ namespace _Scripts.Gameplay.Player.Services
       _playerAttacker.SwitchWeapon(newWeapon);
     }
 
-    public void Disable() =>
+    public override void OnDispose() => 
       _inputService.OnChangeWeapon -= TrySetWeapon;
   }
 }

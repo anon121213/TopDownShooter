@@ -25,7 +25,6 @@ namespace _Scripts.Infrastructure.Scopes.Game
     public async Awaitable StartAsync(CancellationToken cancellation = new())
     {
       await _warmupService.Warmup(cancellation);
-      LifetimeScope.EnqueueParent(_gameScope);
       _sceneLoader.Load(GameConstants.GAME_SCENE);
     }
   }

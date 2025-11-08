@@ -13,9 +13,5 @@ MonoBehaviour:
   m_Name: NetworkConfig
   m_EditorClassIdentifier: 
   <ConnectType>k__BackingField: 0
-  <NetworkManager>k__BackingField:
-    m_AssetGUID: 
-    m_SubObjectName: 
-    m_SubObjectGUID: 
-    m_SubObjectType: 
-    m_EditorAssetChanged: 0
+  <PlayerScopePrefab>k__BackingField: {fileID: 8438844169746950877, guid: 5d6dc2c3d3a0f07408168cbb82cb7211, type: 3}
+  <MobScopePrefab>k__BackingField: {fileID: -6624841040938419518, guid: e28cfcc25b9178d4c8ab2b978f69337d, type: 3}

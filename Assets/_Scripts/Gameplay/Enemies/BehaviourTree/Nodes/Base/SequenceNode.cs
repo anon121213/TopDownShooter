@@ -3,23 +3,19 @@ using _Scripts.Gameplay.Enemies.Base;
 
 namespace _Scripts.Gameplay.Enemies.BehaviourTree.Nodes.Base
 {
-  public class SequenceNode : BehaviorNode
-  {
+  public class SequenceNode : BehaviorNode {
     private readonly List<BehaviorNode> _children = new();
     private int _currentIndex;
 
-    public void AddChild(BehaviorNode node) => 
+    public void AddChild(BehaviorNode node) =>
       _children.Add(node);
 
-    public override NodeStatus Execute(Enemy enemy)
-    {
-      while (_currentIndex < _children.Count)
-      {
-        NodeStatus status = _children[_currentIndex].Execute(enemy);
+    public override NodeStatus Execute(Enemy enemy) {
+      while (_currentIndex < _children.Count) {
+        var status = _children[_currentIndex].Execute(enemy);
 
-        if (status == NodeStatus.Failure)
-        {
-          _currentIndex = 0; 
+        if (status == NodeStatus.Failure) {
+          _currentIndex = 0;
           return NodeStatus.Failure;
         }
 
@@ -29,14 +25,23 @@ namespace _Scripts.Gameplay.Enemies.BehaviourTree.Nodes.Base
         _currentIndex++;
       }
 
-      _currentIndex = 0; 
+      _currentIndex = 0;
       return NodeStatus.Success;
     }
 
-    public override void Dispose()
-    {
-      foreach (var child in _children) 
-        child.Dispose();
+    public override void OnEnable() {
+      foreach (var child in _children)
+        child.OnEnable();
+    }
+
+    public override void OnDisable() {
+      foreach (var child in _children)
+        child.OnDisable();
+    }
+
+    public override void OnDispose() {
+      foreach (var child in _children)
+        child.OnDispose();
     }
   }
 }

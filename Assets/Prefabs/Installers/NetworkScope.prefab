@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2671721154479977474}
   - component: {fileID: 1511560578898456765}
-  - component: {fileID: 5921129523098706412}
   m_Layer: 0
   m_Name: NetworkScope
   m_TagString: Untagged
@@ -50,19 +49,4 @@ MonoBehaviour:
   autoRun: 1
   autoInjectGameObjects: []
   _gameScope: {fileID: 5603077680467725753, guid: 1fbfa1e18f1387743a37b6ad570d40a1, type: 3}
-  _networkSyncService: {fileID: 5921129523098706412}
---- !u!114 &5921129523098706412
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8713467185350418548}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e4e91d3b957a4a8fb45e80538fafdf81, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 0
-  _addedNetworkObject: {fileID: 0}
-  _networkObjectCache: {fileID: 0}
+  _networkRoomModelPrefab: {fileID: 4114527953053469927, guid: e674639a0c7654e438fc6fea602a1cdd, type: 3}
