@@ -1,4 +1,5 @@
 ﻿using _Scripts.Gameplay.Enemies.Spawner;
+using _Scripts.Gameplay.Player.Spawner;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -14,6 +15,7 @@ namespace _Scripts.Infrastructure.Scopes.ArenaScene
       builder.RegisterComponent(_arenaSceneView);
       builder.Register<ArenaSceneModel>(Lifetime.Singleton).AsImplementedInterfaces();
       builder.Register<EnemySpawnerModel>(Lifetime.Singleton).AsImplementedInterfaces();
+      builder.Register<NetworkPlayerFactory>(Lifetime.Singleton).AsImplementedInterfaces();
       builder.RegisterEntryPoint<ArenaSceneEntryPoint>();
     }
   }

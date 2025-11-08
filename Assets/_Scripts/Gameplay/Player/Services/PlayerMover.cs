@@ -26,7 +26,7 @@ namespace _Scripts.Gameplay.Player.Services
 
     public override void OnInitialize()
     {
-      _characterController = PlayerRoot.CharacterController;
+      _characterController = NetworkPlayerView.CharacterController;
       _speed = _staticDataProvider.GetConfig<PlayerConfig>().MoveSpeed;
     }
 

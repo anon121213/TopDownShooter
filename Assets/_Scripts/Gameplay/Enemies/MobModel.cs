@@ -1,5 +1,7 @@
 ﻿using _Scripts.Infrastructure.Debuging;
+using _Scripts.Infrastructure.Extensions;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using UniRx;
 using UnityEngine;
 
@@ -23,6 +25,8 @@ namespace _Scripts.Gameplay.Enemies
     public IReadOnlyReactiveProperty<bool> IsDead => _isDead;
     public IReadOnlyReactiveProperty<bool> IsEnable => _isEnable;
 
+    private readonly SyncVar<MobModelDataDTO> _mobStateDto = new();
+    
     public void Apply(MobModelDataDTO dto)
     {
       SetActorNumber(dto.ActorNumber);
@@ -31,17 +35,18 @@ namespace _Scripts.Gameplay.Enemies
       SetSpawnPosition(dto.SpawnPosition);
       SetHealth(dto.Health);
       SetIsDead(dto.Health <= 0);
-      SetIsEnable(false);
+      SetIsEnable(dto.IsEnable);
+      _mobStateDto.Value = dto;
     }
     
     // ---------------- Spawn callback ----------------
     
     public override void OnStartClient()
     {
-      base.OnStartClient();
-      _ = MobModelRegistry.Models.Add(this);
+      MobModelRegistry.Models.Add(this);
+      Apply(_mobStateDto.Value);
     }
-    
+
     // ---------------- SERVER API ----------------
 
     public void SetActorNumber(int actorNumber)
@@ -49,6 +54,7 @@ namespace _Scripts.Gameplay.Enemies
       if (!IsServerStarted) return;
 
       _mobActorNumber.Value = actorNumber;
+      _mobStateDto.With(dto => dto.ActorNumber = actorNumber);
       RpcSetActorNumber(actorNumber);
     }
 
@@ -57,15 +63,17 @@ namespace _Scripts.Gameplay.Enemies
       if (!IsServerStarted) return;
 
       _mobType.Value = mobType;
+      _mobStateDto.With(dto => dto.MobType = mobType);
       RpcSetMobType(mobType);
     }
 
-    public void SetBehType(MobBehaviourTypes behaviourTypes)
+    public void SetBehType(MobBehaviourTypes behaviourType)
     {
       if (!IsServerStarted) return;
 
-      _behaviourType.Value = behaviourTypes;
-      RpcSetBehType(behaviourTypes);
+      _behaviourType.Value = behaviourType;
+      _mobStateDto.With(dto => dto.BehaviourType = behaviourType);
+      RpcSetBehType(behaviourType);
     }
 
     public void SetSpawnPosition(Vector3 spawnPosition)
@@ -73,6 +81,7 @@ namespace _Scripts.Gameplay.Enemies
       if (!IsServerStarted) return;
 
       _spawnPosition.Value = spawnPosition;
+      _mobStateDto.With(dto => dto.SpawnPosition = spawnPosition);
       RpcSetSpawnPosition(spawnPosition);
     }
 
@@ -82,10 +91,10 @@ namespace _Scripts.Gameplay.Enemies
 
       health = Mathf.Clamp(health, 0, int.MaxValue);
       _health.Value = health;
-
+      _mobStateDto.With(dto => dto.Health = health);
       RpcSetHealth(health);
 
-      if (health <= 0)
+      if (health <= 0) 
         SetIsDead(true);
     }
 
@@ -102,6 +111,7 @@ namespace _Scripts.Gameplay.Enemies
       if (!IsServerStarted) return;
 
       _isEnable.Value = isEnable;
+      _mobStateDto.With(dto => dto.IsEnable = isEnable);
       RpcSetIsEnable(isEnable);
     }
 
@@ -122,21 +132,23 @@ namespace _Scripts.Gameplay.Enemies
   }
 
 
-  public readonly struct MobModelDataDTO
+  public struct MobModelDataDTO
   {
-    public readonly int ActorNumber;
-    public readonly MobType MobType;
-    public readonly MobBehaviourTypes BehaviourType;
-    public readonly Vector3 SpawnPosition;
-    public readonly float Health;
+    public int ActorNumber;
+    public MobType MobType;
+    public MobBehaviourTypes BehaviourType;
+    public Vector3 SpawnPosition;
+    public float Health;
+    public bool IsEnable;
 
-    public MobModelDataDTO(int actorNumber, MobType mobType, MobBehaviourTypes behaviourType, Vector3 spawnPosition, float health)
+    public MobModelDataDTO(int actorNumber, MobType mobType, MobBehaviourTypes behaviourType, Vector3 spawnPosition, float health, bool isEnable = false)
     {
       ActorNumber = actorNumber;
       MobType = mobType;
       BehaviourType = behaviourType;
       SpawnPosition = spawnPosition;
       Health = health;
+      IsEnable = isEnable;
     }
 
     public override string ToString() =>

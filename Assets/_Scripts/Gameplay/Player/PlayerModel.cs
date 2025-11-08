@@ -1,6 +1,8 @@
 ﻿using _Scripts.Gameplay.Player.Data;
 using _Scripts.Infrastructure.Debuging;
+using _Scripts.Infrastructure.Extensions;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using UniRx;
 using UnityEngine;
 
@@ -10,31 +12,34 @@ namespace _Scripts.Gameplay.Player
   {
     private readonly ReactiveProperty<int> _actorNumber = new();
     private readonly ReactiveProperty<bool> _isLocal = new();
+    private readonly ReactiveProperty<bool> _isSynced = new();
     private readonly ReactiveProperty<bool> _isDead = new();
     private readonly ReactiveProperty<float> _health = new();
 
     public IReadOnlyReactiveProperty<int> ActorNumber => _actorNumber;
     public IReadOnlyReactiveProperty<bool> IsLocal => _isLocal;
+    public IReadOnlyReactiveProperty<bool> IsSynced => _isSynced;
     public IReadOnlyReactiveProperty<bool> IsDead => _isDead;
     public IReadOnlyReactiveProperty<float> Health => _health;
 
     public PlayerConfig PlayerConfig { get; private set; }
 
-    public void Apply(PlayerStateDTO dto)
+    private readonly SyncVar<PlayerModelDTO> _playerStateDto = new();
+    
+    public void Apply(PlayerModelDTO dto)
     {
       SetActorNumber(dto.ActorNumber);
-      SetIsLocal(dto.IsLocal);
       SetHealth(dto.Health);
       SetIsDead(dto.IsDead);
+      _playerStateDto.Value = dto;
     }
-    
-    // ---------------- Spawn callback ----------------
     
     public override void OnStartClient()
     {
-      base.OnStartClient();
+      PlayerModelRegistry.Models.Add(this);
       SetIsLocal(IsOwner);
-      _ = PlayerModelRegistry.Models.Add(this);
+      Apply(_playerStateDto.Value);
+      _isSynced.Value = true;
     }
     
     // ---------------- LOCAL SETTERS ----------------
@@ -49,22 +54,22 @@ namespace _Scripts.Gameplay.Player
 
     public void SetActorNumber(int actorNumber)
     {
-      if (!IsHostStarted) return;
       _actorNumber.Value = actorNumber;
+      _playerStateDto.With(dto => dto.ActorNumber = actorNumber);
       RpcSetActorNumber(actorNumber);
     }
 
     public void SetIsDead(bool isDead)
     {
-      if (!IsServerStarted) return;
       _isDead.Value = isDead;
+      _playerStateDto.With(dto => dto.IsDead = isDead);
       RpcSetIsDead(isDead);
     }
 
     public void SetHealth(float health)
     {
-      if (!IsServerStarted) return;
       _health.Value = Mathf.Clamp(health, 0, int.MaxValue);
+      _playerStateDto.With(dto => dto.Health = _health.Value);
       RpcSetHealth(_health.Value);
     }
     
@@ -80,23 +85,21 @@ namespace _Scripts.Gameplay.Player
     }
   }
 
-  public readonly struct PlayerStateDTO
+  public struct PlayerModelDTO
   {
-    public readonly int ActorNumber;
-    public readonly bool IsLocal;
-    public readonly bool IsDead;
-    public readonly float Health;
+    public int ActorNumber;
+    public bool IsDead;
+    public float Health;
 
-    public PlayerStateDTO(int actorNumber, bool isLocal, bool isDead, float health)
+    public PlayerModelDTO(int actorNumber, bool isDead, float health)
     {
       ActorNumber = actorNumber;
-      IsLocal = isLocal;
       IsDead = isDead;
       Health = health;
     }
-    
+
     public override string ToString() =>
-      $"[MobDTO Actor={ActorNumber}, IsLocal={IsLocal}, HP={Health}, IsDead={IsDead}]";
+      $"[MobDTO Actor={ActorNumber}, HP={Health}, IsDead={IsDead}]";
   }
 
   public interface IReadOnlyPlayerModel
@@ -106,6 +109,7 @@ namespace _Scripts.Gameplay.Player
     IReadOnlyReactiveProperty<bool> IsLocal { get; }
     IReadOnlyReactiveProperty<bool> IsDead { get; }
     IReadOnlyReactiveProperty<float> Health { get; }
+    IReadOnlyReactiveProperty<bool> IsSynced { get; }
   }
 
   public interface IPlayerModel : IReadOnlyPlayerModel

@@ -9,7 +9,7 @@ using VContainer.Unity;
 
 namespace _Scripts.Gameplay.Player
 {
-  public class PlayerScope : LifetimeScope
+  public class LocalPlayerScope : LifetimeScope
   {
     protected override void Configure(IContainerBuilder builder)
     {
@@ -22,13 +22,13 @@ namespace _Scripts.Gameplay.Player
       builder.Register<IPlayerBackpack, PlayerBackpack>(Lifetime.Singleton);
       // TODO MAKE ABSTRACT
       builder.Register<IWeaponFactory, WeaponFactory>(Lifetime.Singleton);
-      builder.Register<IPlayerFactory, PlayerFactory>(Lifetime.Singleton).As<IInitializable>();
+      builder.Register<IPlayerFactory, LocalPlayerFactory>(Lifetime.Singleton).As<IInitializable>();
       builder.Register<ICameraFactory, CameraFactory>(Lifetime.Singleton);
       builder.Register<ICameraProvider, CameraProvider>(Lifetime.Singleton);
       builder.Register<ICameraFollower, CameraFollower>(Lifetime.Singleton);
       builder.Register<ICameraController, CameraController>(Lifetime.Singleton);
       
-      builder.RegisterEntryPoint<PlayerEntryPoint>();
+      builder.RegisterEntryPoint<LocalPlayerEntryPoint>();
     }
   }
 }

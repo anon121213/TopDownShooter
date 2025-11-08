@@ -15,7 +15,7 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
     private readonly ReactiveProperty<bool> _isServer = new();
     private readonly ReactiveCollection<int> _clients = new();
     
-    private readonly ReactiveDictionary<int, PlayerStateDTO> _playersDto = new();
+    private readonly ReactiveDictionary<int, PlayerModelDTO> _playersDto = new();
     private readonly ReactiveDictionary<int, IPlayerModel> _playersRoot = new();
     private readonly ReactiveDictionary<int, IReadOnlyPlayerModel> _players = new();
     
@@ -32,7 +32,7 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
     public IReadOnlyReactiveCollection<int> Clients => _clients;
     public IReadOnlyReactiveProperty<bool> IsMobSpawnStarted => _isMobSpawnStarted;
 
-    public IReadOnlyReactiveDictionary<int, PlayerStateDTO> PlayersDto => _playersDto;
+    public IReadOnlyReactiveDictionary<int, PlayerModelDTO> PlayersDto => _playersDto;
     public IReadOnlyReactiveDictionary<int, MobModelDataDTO> MobsDto => _mobsDto;
     public IReadOnlyReactiveDictionary<int, IReadOnlyPlayerModel> Players => _players;
     public IReadOnlyReactiveDictionary<int, IReadOnlyMobModel> Mobs => _mobs;
@@ -88,7 +88,7 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
     //-------------------PLAYERS------------------//
 
 
-    public void AddDtoPlayer(PlayerStateDTO dto)
+    public void AddDtoPlayer(PlayerModelDTO dto)
     {
       if (!IsServerStarted) return;
 
@@ -111,9 +111,8 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
       RpcRemoveDtoPlayer(actorNumber);
     }
 
-    
     // INVOKES ONLY LOCAL
-    public void AddPlayerLocal(IPlayerModel model)
+    public void AddPlayer(IPlayerModel model)
     {
       if (!IsServerStarted) return;
 
@@ -215,7 +214,7 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
     [ObserversRpc] private void RpcAddClient(int id) => _clients.Add(id);
     [ObserversRpc] private void RpcRemoveClient(int id) => _clients.Remove(id);
 
-    [ObserversRpc] private void RpcAddDtoPlayer(int id, PlayerStateDTO dto) => _playersDto[id] = dto;
+    [ObserversRpc] private void RpcAddDtoPlayer(int id, PlayerModelDTO dto) => _playersDto[id] = dto;
     [ObserversRpc] private void RpcRemoveDtoPlayer(int id) => _playersDto.Remove(id);
     
     [ObserversRpc] private void RpcAddDtoMob(int id, MobModelDataDTO dto) => _mobsDto[id] = dto;
@@ -245,8 +244,8 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
     void RemoveClient(int clientId);
     void SetConnectionState(LocalConnectionState connectionState);
 
-    void AddDtoPlayer(PlayerStateDTO data);
-    void AddPlayerLocal(IPlayerModel playerModel);
+    void AddDtoPlayer(PlayerModelDTO data);
+    void AddPlayer(IPlayerModel playerModel);
     void RemoveDtoPlayer(int actorNumber);
     void RemovePlayer(int playerId);
     
@@ -266,7 +265,7 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
     IReadOnlyReactiveCollection<int> Clients { get; }
     IReadOnlyReactiveProperty<bool> IsMobSpawnStarted { get; }
 
-    IReadOnlyReactiveDictionary<int, PlayerStateDTO> PlayersDto { get; }
+    IReadOnlyReactiveDictionary<int, PlayerModelDTO> PlayersDto { get; }
     IReadOnlyReactiveDictionary<int, MobModelDataDTO> MobsDto { get; }
     
     IReadOnlyReactiveDictionary<int, IReadOnlyPlayerModel> Players { get; }

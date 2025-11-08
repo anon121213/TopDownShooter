@@ -9,35 +9,53 @@ namespace _Scripts.Infrastructure.Scopes.ArenaScene
 {
   public class ArenaSceneModel : IArenaSceneModel
   {
-    private readonly ReactiveDictionary<int, PlayerRootView> _players = new();
+    private readonly ReactiveDictionary<int, NetworkPlayerView> _players = new();
     private readonly ReactiveDictionary<int, Enemy> _enemies = new();
 
-    private readonly ReactiveDictionary<int, PlayerScope> _playersScopes = new();
-    private readonly ReactiveDictionary<int, MobScope> _mobScopes = new();
+    private readonly ReactiveDictionary<int, LocalPlayerScope> _localPlayersScopes = new();
+    private readonly ReactiveDictionary<int, RemotePlayerScope> _remotePlayerScopes = new();
+    private readonly ReactiveDictionary<int, LocalMobScope> _mobScopes = new();
     
-    public IReadOnlyReactiveDictionary<int, PlayerRootView> Players => _players;
+    public IReadOnlyReactiveDictionary<int, NetworkPlayerView> Players => _players;
     public IReadOnlyReactiveDictionary<int, Enemy> Enemies => _enemies;
     
-    public IReadOnlyReactiveDictionary<int, PlayerScope> PlayersScopes => _playersScopes;
-    public IReadOnlyReactiveDictionary<int, MobScope> MobScopes => _mobScopes;
+    public IReadOnlyReactiveDictionary<int, LocalPlayerScope> LocalPlayersScopes => _localPlayersScopes;
+    public IReadOnlyReactiveDictionary<int, RemotePlayerScope> RemotePlayersScopes => _remotePlayerScopes;
+    public IReadOnlyReactiveDictionary<int, LocalMobScope> MobScopes => _mobScopes;
     
-    public void AddPlayerScope(int actorNumber, PlayerScope playerView)
+    public void AddLocalPlayerScope(int actorNumber, LocalPlayerScope localPlayerScope)
     {
-      if (_playersScopes.TryAdd(actorNumber, playerView)) 
+      if (_localPlayersScopes.TryAdd(actorNumber, localPlayerScope)) 
         return;
       
       Debug.LogError($"PlayerScope with actor number {actorNumber} already exists!");
     }
-    
-    public void RemovePlayerScope(int actorNumber)
+
+    public void AddRemotePlayerScope(int actorNumber, RemotePlayerScope remotePlayerScope)
     {
-      if (_playersScopes.Remove(actorNumber)) 
+      if (_remotePlayerScopes.TryAdd(actorNumber, remotePlayerScope)) 
+        return;
+      
+      Debug.LogError($"PlayerScope with actor number {actorNumber} already exists!");
+    }
+
+    public void RemoveLocalPlayerScope(int actorNumber)
+    {
+      if (_localPlayersScopes.Remove(actorNumber)) 
         return;
       
       Debug.LogError($"PlayerScope with actor number {actorNumber} does not exists!");
     }
     
-    public void AddMobScope(int actorNumber, MobScope playerView)
+    public void RemoveRemotePlayerScope(int actorNumber)
+    {
+      if (_remotePlayerScopes.Remove(actorNumber)) 
+        return;
+      
+      Debug.LogError($"PlayerScope with actor number {actorNumber} does not exists!");
+    }
+
+    public void AddMobScope(int actorNumber, LocalMobScope playerView)
     {
       if (_mobScopes.TryAdd(actorNumber, playerView)) 
         return;
@@ -53,18 +71,18 @@ namespace _Scripts.Infrastructure.Scopes.ArenaScene
       Debug.LogError($"EnemyScope with actor number {actorNumber} does not exists!");
     }
 
-    public void AddPlayer(PlayerRootView playerRootView)
+    public void AddPlayer(NetworkPlayerView networkPlayerView)
     {
-      if (_players.TryAdd(playerRootView.ActorNumber.Value, playerRootView)) 
+      if (_players.TryAdd(networkPlayerView.ActorNumber.Value, networkPlayerView)) 
         return;
       
-      Debug.LogError($"Player with actor number {playerRootView.ActorNumber.Value} already exists!");
+      Debug.LogError($"Player with actor number {networkPlayerView.ActorNumber.Value} already exists!");
     }
     
     public void RemovePlayer(int actorNumber)
     {
-      if (_players.Remove(actorNumber)) 
-        return;
+      if (_players.Remove(actorNumber))
+        return; 
       
       Debug.LogError($"Player with actor number {actorNumber} does not exists!");
     }
@@ -88,16 +106,19 @@ namespace _Scripts.Infrastructure.Scopes.ArenaScene
   
   public interface IArenaSceneModel : IRaedOnlyArenaSceneModel
   {
-    public IReadOnlyReactiveDictionary<int, PlayerScope> PlayersScopes { get; }
-    public IReadOnlyReactiveDictionary<int, MobScope> MobScopes { get; }
+    public IReadOnlyReactiveDictionary<int, LocalMobScope> MobScopes { get; }
+    public IReadOnlyReactiveDictionary<int, LocalPlayerScope> LocalPlayersScopes { get; }
+    public IReadOnlyReactiveDictionary<int, RemotePlayerScope> RemotePlayersScopes { get; }
+
+    void AddLocalPlayerScope(int actorNumber, LocalPlayerScope localPlayerScope);
+    void AddRemotePlayerScope(int actorNumber, RemotePlayerScope remotePlayerScope);
+    void RemoveLocalPlayerScope(int actorNumber);
+    void RemoveRemotePlayerScope(int actorNumber);
     
-    void AddPlayerScope(int actorNumber, PlayerScope playerView);
-    void RemovePlayerScope(int actorNumber);
-    
-    void AddMobScope(int actorNumber, MobScope playerView);
+    void AddMobScope(int actorNumber, LocalMobScope playerView);
     void RemoveMobScope(int actorNumber);
     
-    void AddPlayer(PlayerRootView playerRootView);
+    void AddPlayer(NetworkPlayerView networkPlayerView);
     void RemovePlayer(int actorNumber);
     
     void AddMob(Enemy playerView);
@@ -106,7 +127,7 @@ namespace _Scripts.Infrastructure.Scopes.ArenaScene
 
   public interface IRaedOnlyArenaSceneModel
   {
-    IReadOnlyReactiveDictionary<int, PlayerRootView> Players { get; }
+    IReadOnlyReactiveDictionary<int, NetworkPlayerView> Players { get; }
     IReadOnlyReactiveDictionary<int, Enemy> Enemies { get; }
   }
 }

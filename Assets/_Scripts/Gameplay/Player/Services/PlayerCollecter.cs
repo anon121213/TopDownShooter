@@ -15,7 +15,7 @@ namespace _Scripts.Gameplay.Player.Services
 
     public override void OnInitialize()
     {
-      PlayerRoot.PlayerCollider.OnTriggerEnterAsObservable()
+      LocalPlayerView.PlayerCollider.OnTriggerEnterAsObservable()
         .Subscribe(OnCollide)
         .AddTo(Disposables);
     }

@@ -9,7 +9,6 @@ using _Scripts.Infrastructure.Services.Data.AssetLoader;
 using _Scripts.Infrastructure.Services.Data.DataProvider;
 using _Scripts.Infrastructure.Services.Input;
 using _Scripts.Infrastructure.Services.Pool;
-using _Scripts.Infrastructure.Services.Scenes;
 using _Scripts.Infrastructure.Services.Warmup;
 using FishNet.Managing;
 using UnityEngine;
@@ -28,7 +27,6 @@ namespace _Scripts.Infrastructure.Scopes
       builder.RegisterComponent(_networkManager).AsSelf();
       
       // SERVICES
-      builder.Register<ISceneLoader, SceneLoader>(Lifetime.Singleton);
       builder.Register<IAssetProvider, AssetProvider>(Lifetime.Singleton);
       builder.Register<IStaticDataProvider, StaticDataProvider>(Lifetime.Singleton);
       builder.Register<IInputService, InputService>(Lifetime.Singleton);

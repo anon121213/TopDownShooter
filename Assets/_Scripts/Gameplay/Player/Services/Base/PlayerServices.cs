@@ -30,10 +30,10 @@ namespace _Scripts.Gameplay.Player.Services.Base
         service.OnUpdate();
     }
 
-    public void ConstructServices(PlayerRootView playerRootView)
+    public void ConstructServices(NetworkPlayerView networkPlayerView, LocalPlayerView localPlayerView)
     {
       foreach (var service in _services) 
-        service.Construct(playerRootView);
+        service.Construct(networkPlayerView, localPlayerView);
     }
     
     public void InitializeServices()
@@ -62,11 +62,15 @@ namespace _Scripts.Gameplay.Player.Services.Base
   }
   public abstract class PlayerService
   {
-    protected PlayerRootView PlayerRoot { get; private set; }
+    protected NetworkPlayerView NetworkPlayerView { get; private set; }
+    protected LocalPlayerView LocalPlayerView { get; private set; }
     protected bool IsEnable { get; private set; }
     protected CompositeDisposable Disposables { get; private set; } = new();
     
-    public void Construct(PlayerRootView playerRootView){ PlayerRoot = playerRootView; }
+    public void Construct(NetworkPlayerView networkPlayerView, LocalPlayerView localPlayerView){
+      NetworkPlayerView = networkPlayerView;
+      LocalPlayerView = localPlayerView;
+    }
 
     public virtual void OnInitialize() { }
     public virtual void OnUpdate() { }
@@ -79,7 +83,7 @@ namespace _Scripts.Gameplay.Player.Services.Base
 
   public interface IPlayerServices
   {
-    void ConstructServices(PlayerRootView playerRoot);
+    void ConstructServices(NetworkPlayerView networkPlayer, LocalPlayerView localPlayerView);
     void InitializeServices();
     void EnableServices();
     void DisableServices();

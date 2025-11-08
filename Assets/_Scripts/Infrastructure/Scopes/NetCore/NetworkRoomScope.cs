@@ -3,6 +3,7 @@ using _Scripts.Gameplay.Enemies.Spawner;
 using _Scripts.Gameplay.Player.Spawner;
 using _Scripts.Infrastructure.Scopes.Game;
 using _Scripts.Infrastructure.Services.Network;
+using _Scripts.Infrastructure.Services.Scenes;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -19,8 +20,9 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
       builder.RegisterInstance(Instantiate(_networkRoomModelPrefab)).As<IReadOnlyNetworkRoomModel>().As<INetworkRoomModel>();
 
       builder.Register<EnemyFactory>(Lifetime.Singleton).AsImplementedInterfaces();
-      builder.Register<INetworkDamageService, NetworkDamageService>(Lifetime.Singleton);
-      builder.Register<IActorNumberAllocator, ActorNumberAllocator>(Lifetime.Singleton);
+      builder.Register<NetworkDamageService>(Lifetime.Singleton).AsImplementedInterfaces();
+      builder.Register<ActorNumberAllocator>(Lifetime.Singleton).AsImplementedInterfaces();
+      builder.Register<SceneLoader>(Lifetime.Singleton).AsImplementedInterfaces();
       builder.Register<PlayerSpawner>(Lifetime.Singleton).AsImplementedInterfaces();
       builder.Register<EnemySpawner>(Lifetime.Singleton).AsImplementedInterfaces();
       

@@ -10,36 +10,33 @@ using IInitializable = VContainer.Unity.IInitializable;
 
 namespace _Scripts.Gameplay.Player.Spawner
 {
-  public class PlayerFactory : IInitializable, IPlayerFactory
+  public class LocalPlayerFactory : IInitializable, IPlayerFactory
   {
     private readonly IStaticDataProvider _staticDataProvider;
     private readonly IWeaponFactory _weaponFactory;
     private readonly IPlayerBackpack _playerBackpack;
     private readonly IPlayerAttacker _playerAttacker;
-    private readonly IObjectPool _objectPool;
     private readonly ICameraFactory _cameraFactory;
     private PlayerConfig _playerConfig;
 
-    public PlayerFactory(IStaticDataProvider staticDataProvider, IWeaponFactory weaponFactory,
-      IPlayerBackpack playerBackpack, IPlayerAttacker playerAttacker,
-      IObjectPool objectPool, ICameraFactory cameraFactory)
+    public LocalPlayerFactory(IStaticDataProvider staticDataProvider, IWeaponFactory weaponFactory,
+      IPlayerBackpack playerBackpack, IPlayerAttacker playerAttacker, ICameraFactory cameraFactory)
     {
       _staticDataProvider = staticDataProvider;
       _weaponFactory = weaponFactory;
       _playerBackpack = playerBackpack;
       _playerAttacker = playerAttacker;
-      _objectPool = objectPool;
       _cameraFactory = cameraFactory;
     }
 
-    public void Initialize()
-    {
+    public void Initialize() => 
       _playerConfig = _staticDataProvider.GetConfig<PlayerConfig>();
-    }
 
-    public PlayerRootView CreatePlayer(Vector3 position, Quaternion rotation)
+    public LocalPlayerView CreateLocalPlayer(Vector3 position, Quaternion rotation, Transform root)
     {
-      var player = _objectPool.GetGameObject(_playerConfig.Prefab, position, rotation);
+      var player = Object.Instantiate(_playerConfig.LocalPlayerPrefab, root);
+      player.transform.localPosition = position;
+      player.transform.localRotation = rotation;
       
       var pistol = _weaponFactory.CreateWeapon(ItemType.Pistol, player.transform);
       var grenade = _weaponFactory.CreateWeapon(ItemType.Grenade, player.transform);
@@ -51,14 +48,10 @@ namespace _Scripts.Gameplay.Player.Spawner
       _cameraFactory.CreateCamera(player.transform);
       return player;
     }
-
-    public void ReturnPlayer(PlayerRootView playerRoot) => 
-      _objectPool.ReturnGameObject(playerRoot, _playerConfig.Prefab);
   }
 
   public interface IPlayerFactory
   {
-    PlayerRootView CreatePlayer(Vector3 position, Quaternion rotation);
-    void ReturnPlayer(PlayerRootView playerRoot);
+    LocalPlayerView CreateLocalPlayer(Vector3 position, Quaternion rotation, Transform root);
   }
 }

@@ -20,7 +20,7 @@ namespace _Scripts.Gameplay.Enemies
     private readonly MobModelDataDTO _modelDataDto;
     private readonly NetworkManager _networkManager;
     private readonly IArenaSceneModel _arenaSceneModel;
-    private readonly MobScope _mobScope;
+    private readonly LocalMobScope _localMobScope;
     private readonly CompositeDisposable _disposables = new();
 
     private Enemy _enemy;
@@ -28,7 +28,7 @@ namespace _Scripts.Gameplay.Enemies
 
     public MobEntryPoint(IStaticDataProvider staticDataProvider, IEnemyFactory enemyFactory,
       INetworkRoomModel networkRoomModel, MobModelDataDTO modelDataDto, NetworkManager networkManager,
-      IArenaSceneModel arenaSceneModel, MobScope mobScope)
+      IArenaSceneModel arenaSceneModel, LocalMobScope localMobScope)
     {
       _staticDataProvider = staticDataProvider;
       _enemyFactory = enemyFactory;
@@ -36,35 +36,30 @@ namespace _Scripts.Gameplay.Enemies
       _modelDataDto = modelDataDto;
       _networkManager = networkManager;
       _arenaSceneModel = arenaSceneModel;
-      _mobScope = mobScope;
+      _localMobScope = localMobScope;
     }
 
     public void Initialize()
     {
-      var enemiesConfig = _staticDataProvider.GetConfig<EnemiesConfig>();
+      if (!_networkRoomModel.IsServer.Value)
+        return;
       
+      var enemiesConfig = _staticDataProvider.GetConfig<EnemiesConfig>();
+
       if (!enemiesConfig.TryGetConfigByType(_modelDataDto.MobType, out var config))
         return;
 
       _enemy = _enemyFactory.CreateEnemyByType(_modelDataDto.MobType, _modelDataDto.SpawnPosition, Quaternion.identity);
-      _enemy.MobModel.Apply(_modelDataDto);
-
-      _arenaSceneModel.AddMob(_enemy);
-      _arenaSceneModel.AddMobScope(_enemy.MobModel.ActorNumber.Value, _mobScope);
       
-      if (_networkRoomModel.IsServer.Value) 
+      if (_networkRoomModel.IsServer.Value)
         _networkManager.ServerManager.Spawn(_enemy);
       
+      _enemy.MobModel.Apply(_modelDataDto);
       _enemy.SetContext(new Context(config));
 
-      _enemy.MobModel.Health.Subscribe(health =>
-      {
-        if (health <= 0)
-          _enemy.MobModel.SetIsDead(true);
-        else if (health > 0 && _enemy.MobModel.IsDead.Value)
-          _enemy.MobModel.SetIsDead(false);
-      }).AddTo(_disposables);
-     
+      _arenaSceneModel.AddMob(_enemy);
+      _arenaSceneModel.AddMobScope(_enemy.MobModel.ActorNumber.Value, _localMobScope);
+
       Observable.Interval(TimeSpan.FromSeconds(0.5f))
         .Subscribe(_ =>
         {
@@ -96,8 +91,22 @@ namespace _Scripts.Gameplay.Enemies
         .AddTo(_disposables);
 
       if (_enemy is IPlayerTargetableEnemy targetableEnemy)
-        foreach (var player in _arenaSceneModel.Players) 
+      {
+        foreach (var player in _arenaSceneModel.Players)
           targetableEnemy.TryAddTarget(player.Value.transform);
+
+        _arenaSceneModel.Players
+          .ObserveAdd()
+          .Subscribe(player =>
+            targetableEnemy.TryAddTarget(player.Value.transform))
+          .AddTo(_disposables);
+
+        _arenaSceneModel.Players
+          .ObserveRemove()
+          .Subscribe(player =>
+            targetableEnemy.TryRemoveTarget(player.Value.transform))
+          .AddTo(_disposables);
+      }
 
       if (_networkRoomModel.IsServer.Value) _enemy.EnableEnemy();
       else _enemy.DisableEnemy();
@@ -107,7 +116,7 @@ namespace _Scripts.Gameplay.Enemies
     {
       _disposables?.Dispose();
       _arenaSceneModel.RemoveMob(_enemy.MobModel.ActorNumber.Value);
-      _arenaSceneModel.AddMobScope(_enemy.MobModel.ActorNumber.Value, _mobScope);
+      _arenaSceneModel.RemoveMobScope(_enemy.MobModel.ActorNumber.Value);
     }
   }
 }

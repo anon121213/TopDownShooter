@@ -5,6 +5,7 @@ using _Scripts.Gameplay.Player;
 using _Scripts.Gameplay.Player.Spawner;
 using _Scripts.Infrastructure.Scopes.NetCore;
 using _Scripts.Infrastructure.Services.Data.DataProvider;
+using FishNet.Managing;
 using UniRx;
 using UnityEngine;
 using VContainer;
@@ -20,6 +21,8 @@ namespace _Scripts.Infrastructure.Scopes.ArenaScene
     private readonly IPlayerSpawner _playerSpawner;
     private readonly IArenaSceneModel _arenaSceneModel;
     private readonly IEnemySpawnerModel _enemySpawnerModel;
+    private readonly INetworkPlayerFactory _playerFactory;
+    private readonly NetworkManager _networkManager;
 
     private readonly CompositeDisposable _disposables = new();
 
@@ -30,7 +33,9 @@ namespace _Scripts.Infrastructure.Scopes.ArenaScene
       IReadOnlyNetworkRoomModel networkRoomModel,
       IPlayerSpawner playerSpawner,
       IArenaSceneModel arenaSceneModel,
-      IEnemySpawnerModel enemySpawnerModel)
+      IEnemySpawnerModel enemySpawnerModel,
+      INetworkPlayerFactory playerFactory,
+      NetworkManager networkManager)
     {
       _arenaScope = arenaScope;
       _staticDataProvider = staticDataProvider;
@@ -38,11 +43,16 @@ namespace _Scripts.Infrastructure.Scopes.ArenaScene
       _playerSpawner = playerSpawner;
       _arenaSceneModel = arenaSceneModel;
       _enemySpawnerModel = enemySpawnerModel;
+      _playerFactory = playerFactory;
+      _networkManager = networkManager;
     }
 
     public void Initialize()
     {
       _networkConfig = _staticDataProvider.GetConfig<NetworkConfig>();
+      
+      if (!_networkRoomModel.IsServer.Value)
+        return;
       
       // ------------PLAYERS-------------
       
@@ -54,12 +64,29 @@ namespace _Scripts.Infrastructure.Scopes.ArenaScene
         .Subscribe(player => CreatePlayer(player.Value))
         .AddTo(_disposables);
 
-      _networkRoomModel.PlayersDto
+      _networkRoomModel.Players
         .ObserveRemove()
-        .Subscribe(player => _arenaSceneModel.PlayersScopes[player.Key].Dispose())
+        .Subscribe(player =>
+        {
+          if (_arenaSceneModel.LocalPlayersScopes.TryGetValue(player.Key, out var localScope)) 
+            localScope.Dispose();
+          
+          if (_arenaSceneModel.RemotePlayersScopes.TryGetValue(player.Key, out var remoteScope)) 
+            remoteScope.Dispose();
+        })
+        .AddTo(_disposables);
+
+      _networkRoomModel.Clients
+        .ObserveAdd()
+        .Subscribe(client => _playerSpawner.SpawnPlayer(client.Value))
         .AddTo(_disposables);
       
-      _playerSpawner.SpawnLocalPlayer();
+      _networkRoomModel.Clients
+        .ObserveRemove()
+        .Subscribe(client => _playerSpawner.DespawnPlayer(client.Value))
+        .AddTo(_disposables);
+      
+      _playerSpawner.SpawnPlayer(_networkRoomModel.ClientId.Value);
       
       // --------------ENEMIES--------------
 
@@ -73,7 +100,7 @@ namespace _Scripts.Infrastructure.Scopes.ArenaScene
 
       _networkRoomModel.MobsDto
         .ObserveRemove()
-        .Subscribe(enemy => _arenaSceneModel.PlayersScopes[enemy.Key].Dispose())
+        .Subscribe(enemy => _arenaSceneModel.LocalPlayersScopes[enemy.Key].Dispose())
         .AddTo(_disposables);
       
       _enemySpawnerModel.StartSpawnEnemies();
@@ -81,28 +108,12 @@ namespace _Scripts.Infrastructure.Scopes.ArenaScene
 
     // ------------PLAYERS--------------
     
-    private void CreatePlayer(PlayerStateDTO state)
+    private void CreatePlayer(PlayerModelDTO model)
     {
-      if (_networkRoomModel.ClientId.Value == state.ActorNumber)
-      {
-        CreateLocalPlayer(state);
+      if (!_networkRoomModel.IsServer.Value)
         return;
-      }
-          
-      CreateRemotePlayer();
-    }
-    
-    private void CreateLocalPlayer(PlayerStateDTO state)
-    {
-      _arenaScope.CreateChildFromPrefab(
-        _networkConfig.PlayerScopePrefab,
-        builder => builder.RegisterInstance(state)
-      );
-    }
-
-    private void CreateRemotePlayer()
-    {
-      Debug.LogError("CreateRemotePlayer");
+      
+      _playerFactory.CreateNetworkPlayer(Vector3.zero, Quaternion.identity, model);
     }
 
     // -----------MOBS------------
@@ -119,7 +130,7 @@ namespace _Scripts.Infrastructure.Scopes.ArenaScene
     
     private void CreateLocalMob(MobModelDataDTO dto)
     {
-      _arenaScope.CreateChildFromPrefab(_networkConfig.MobScopePrefab, builder =>
+      _arenaScope.CreateChildFromPrefab(_networkConfig.LocalMobScopePrefab, builder =>
         builder.RegisterInstance(dto));
     }
     

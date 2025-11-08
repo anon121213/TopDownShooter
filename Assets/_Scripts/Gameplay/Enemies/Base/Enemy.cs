@@ -21,7 +21,6 @@ namespace _Scripts.Gameplay.Enemies.Base
     public IReadOnlyReactiveProperty<bool> IsPooled => _isPooled;
 
     public readonly CompositeDisposable ViewDisposables = new CompositeDisposable();
-    private readonly SerialDisposable _avatarSerialDisposable = new SerialDisposable();
 
     public void SetContext(Context context)
     {
@@ -77,7 +76,6 @@ namespace _Scripts.Gameplay.Enemies.Base
     {
       EnemyAI?.Dispose();
       ViewDisposables.Dispose();
-      _avatarSerialDisposable.Dispose();
     }
   }
 

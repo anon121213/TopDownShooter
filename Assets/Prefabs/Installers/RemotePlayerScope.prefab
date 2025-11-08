@@ -9,9 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1473387373814264616}
-  - component: {fileID: 8438844169746950877}
+  - component: {fileID: -4652954628310012961}
   m_Layer: 0
-  m_Name: PlayerScope
+  m_Name: RemotePlayerScope
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -32,7 +32,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8438844169746950877
+--- !u!114 &-4652954628310012961
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -41,7 +41,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8364094438653184504}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3da4c29d05fa4b53816fb2f5c92339a7, type: 3}
+  m_Script: {fileID: 11500000, guid: 0726262e45ed4c0eb4acf0e96a229d30, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   parentReference:

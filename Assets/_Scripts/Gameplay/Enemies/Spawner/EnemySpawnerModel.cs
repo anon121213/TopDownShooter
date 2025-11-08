@@ -34,8 +34,6 @@ namespace _Scripts.Gameplay.Enemies.Spawner
 
     public void Initialize()
     {
-      Debug.LogError("asd");
-
       _enemiesConfig = _staticDataProvider.GetConfig<EnemiesConfig>();
 
       if (_networkRoomModel.IsServer.Value) 

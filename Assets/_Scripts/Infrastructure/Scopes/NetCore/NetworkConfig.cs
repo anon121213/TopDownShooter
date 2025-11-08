@@ -8,8 +8,9 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
   public class NetworkConfig : ScriptableObject
   {
     [field: SerializeField] public ConnectType ConnectType { get; private set; }
-    [field: SerializeField] public PlayerScope PlayerScopePrefab { get; private set; }
-    [field: SerializeField] public MobScope MobScopePrefab { get; private set; }
+    [field: SerializeField] public LocalPlayerScope LocalPlayerScopePrefab { get; private set; }
+    [field: SerializeField] public RemotePlayerScope RemotePlayerScopePrefab { get; private set; }
+    [field: SerializeField] public LocalMobScope LocalMobScopePrefab { get; private set; }
   }
 
   public enum ConnectType

@@ -1,6 +1,7 @@
 ﻿using _Scripts.Gameplay.Player.Data;
 using _Scripts.Infrastructure.Scopes.NetCore;
 using _Scripts.Infrastructure.Services.Data.DataProvider;
+using UnityEngine;
 using VContainer.Unity;
 
 namespace _Scripts.Gameplay.Player.Spawner
@@ -22,22 +23,25 @@ namespace _Scripts.Gameplay.Player.Spawner
     public void Initialize() => 
       _playerConfig = _staticDataProvider.GetConfig<PlayerConfig>();
 
-    public void SpawnLocalPlayer()
+    public void SpawnPlayer(int actorNumber)
     {
       if (!_networkRoomModel.IsServer.Value)
         return;
-
-      _networkRoomModel.AddDtoPlayer(new PlayerStateDTO(
-        _networkRoomModel.ClientId.Value,
-        true,
+  
+      _networkRoomModel.AddDtoPlayer(new PlayerModelDTO(
+        actorNumber,
         false,
         _playerConfig.InitHealth
       ));
     }
+
+    public void DespawnPlayer(int actorNumber) => 
+      _networkRoomModel.RemovePlayer(actorNumber);
   }
 
   public interface IPlayerSpawner
   {
-    void SpawnLocalPlayer();
+    void SpawnPlayer(int actorNumber);
+    void DespawnPlayer(int actorNumber);
   }
 }
