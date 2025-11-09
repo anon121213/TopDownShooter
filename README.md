@@ -93,3 +93,5 @@
 - Добавить prediction для проджектайлов, мобов и игроков
 
 - Избавится от FinObjectOfType для NetworkRoomModel на клиентах а так же от подписки на поиск arena scene scope у network view игроков, надо сделать смену сцены мануальной и только после спавна netowrkRoomModel продолжать инициализацию
+
+- Написать сервис для отправки любых ивентов и смены состояния netowrk моделей из вне монобехов. Решит прлблемы с FinObjectOfType а так же необходипостью спавна всех моделей как networkobject (решено в моем netcode framework: https://github.com/anon121213/NetCodeFramework)
