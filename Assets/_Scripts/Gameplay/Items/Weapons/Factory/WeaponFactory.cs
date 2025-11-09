@@ -16,7 +16,7 @@ namespace _Scripts.Gameplay.Items.Weapons.Factory
     private readonly IPlayerAttacker _playerAttacker;
     private readonly IProjectileSpawner _projectileSpawner;
     private readonly IReadOnlyNetworkRoomModel _roomModel;
-    private readonly AllWeaponsConfig _weaponsConfigs;
+    private readonly WeaponsConfig _weaponsConfigs;
 
     public WeaponFactory(IStaticDataProvider staticDataProvider,
       IPlayerBackpack playerBackpack,
@@ -28,7 +28,7 @@ namespace _Scripts.Gameplay.Items.Weapons.Factory
       _playerAttacker = playerAttacker;
       _projectileSpawner = projectileSpawner;
       _roomModel = roomModel;
-      _weaponsConfigs = staticDataProvider.GetConfig<AllWeaponsConfig>();
+      _weaponsConfigs = staticDataProvider.GetConfig<WeaponsConfig>();
     }
 
     public IWeapon CreateWeapon(ItemType itemType, Transform owner)

@@ -9,15 +9,12 @@ namespace _Scripts.Infrastructure.Scopes.Game
 {
   public class GameService : IAsyncStartable
   {
-    private readonly GameScope _gameScope;
     private readonly ISceneLoader _sceneLoader;
     private readonly IWarmupService _warmupService;
 
-    public GameService(GameScope gameScope, 
-      ISceneLoader sceneLoader,
+    public GameService(ISceneLoader sceneLoader,
       IWarmupService warmupService)
     {
-      _gameScope = gameScope;
       _sceneLoader = sceneLoader;
       _warmupService = warmupService;
     }

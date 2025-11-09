@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using _Scripts.Gameplay.Enemies.Data;
 using UnityEngine;
 
 namespace _Scripts.Gameplay.Enemies.Spawner

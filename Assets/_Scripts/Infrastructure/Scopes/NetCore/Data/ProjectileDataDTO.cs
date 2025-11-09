@@ -17,5 +17,8 @@ namespace _Scripts.Infrastructure.Scopes.NetCore.Data
       Position = position;
       Rotation = rotation;
     }
+
+    public ProjectileDataDTO CloneAndSetActorNumber(int actorNumber) => 
+      new(actorNumber, ProjectileType, Position, Rotation);
   }
 }

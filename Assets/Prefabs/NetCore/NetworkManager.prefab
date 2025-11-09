@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8752153910040512510}
   - component: {fileID: 2075614047146454614}
   - component: {fileID: 4933377352687575767}
+  - component: {fileID: 6650738074596268183}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -48,7 +49,7 @@ MonoBehaviour:
   _refreshDefaultPrefabs: 0
   _runInBackground: 1
   _dontDestroyOnLoad: 1
-  _objectPool: {fileID: 0}
+  _objectPool: {fileID: 6650738074596268183}
   _persistence: 0
   _logging: {fileID: 0}
   _spawnablePrefabs: {fileID: 11400000, guid: 4521db4e9676f6e44aff87c1e2eb3d2a, type: 2}
@@ -74,3 +75,16 @@ MonoBehaviour:
   _port: 7770
   _maximumClients: 4095
   _clientAddress: localhost
+--- !u!114 &6650738074596268183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5642206386317191982}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb13d174096685549b1d6a94d726ff7d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _enabled: 1

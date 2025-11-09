@@ -54,6 +54,14 @@ namespace _Scripts.Gameplay.Enemies.Factory
       return InitEnemyAiByType(enemyObj, config);
     }
 
+    public void ReturnEnemy(MobType mobType, Enemy instance)
+    {
+      if (!_enemiesConfig.TryGetConfigByType(mobType, out var config))
+        throw new InvalidKeyException($"Cannot find enemy config by type {mobType}");
+      
+      _pool.ReturnGameObject(instance, config.Prefab);
+    }
+    
     private Enemy InitEnemyAiByType(Enemy enemy, EnemyData config)
     {
       switch (config.BehaviourType)
@@ -76,6 +84,7 @@ namespace _Scripts.Gameplay.Enemies.Factory
           simpleEnemy.SetAI(_enemyAiFactory.CreateSimpleEnemyAI(simpleEnemy));
           simpleEnemy.OnGetFromPool();
           return simpleEnemy;
+        
         default:
           Debug.LogError($"Enemy by type {config.BehaviourType} does not exist");
           return null;
@@ -86,5 +95,6 @@ namespace _Scripts.Gameplay.Enemies.Factory
   public interface IEnemyFactory
   {
     Enemy CreateEnemyByType(MobType enemyType, Vector3 at, Quaternion look, Transform parent = null);
+    void ReturnEnemy(MobType mobType, Enemy instance);
   }
 }

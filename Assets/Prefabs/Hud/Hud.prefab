@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7066958105193968026}
   - component: {fileID: 4936089090828175328}
   - component: {fileID: 5989460516299364035}
+  - component: {fileID: 2940525413438442451}
   m_Layer: 5
   m_Name: Hud
   m_TagString: Untagged
@@ -31,8 +32,8 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 5915518487156255670}
-  - {fileID: 5481591628336033578}
+  - {fileID: 3784877823488868930}
+  - {fileID: 7332153502224780354}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -103,7 +104,21 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!1001 &4528630531578333473
+--- !u!114 &2940525413438442451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8277267622781539512}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b50eb3a0aaec09942be96441d7f21a43, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _pingPresenter: {fileID: 6701618888303212275}
+  _enemiesCountPresenter: {fileID: 5211246453022585685}
+--- !u!1001 &1660527754215483977
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -111,9 +126,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2184984662740339089}
     m_Modifications:
+    - target: {fileID: 3507222391185270102, guid: 5ba45ec75e87bc04c988c55fdfa91433, type: 3}
+      propertyPath: m_text
+      value: 'ping: 1000'
+      objectReference: {fileID: 0}
+    - target: {fileID: 3507222391185270102, guid: 5ba45ec75e87bc04c988c55fdfa91433, type: 3}
+      propertyPath: m_margin.x
+      value: -34.248413
+      objectReference: {fileID: 0}
     - target: {fileID: 8058467921429033319, guid: 5ba45ec75e87bc04c988c55fdfa91433, type: 3}
       propertyPath: m_Name
-      value: Points
+      value: Ping
       objectReference: {fileID: 0}
     - target: {fileID: 8271542355347006987, guid: 5ba45ec75e87bc04c988c55fdfa91433, type: 3}
       propertyPath: m_Pivot.x
@@ -200,12 +223,23 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5ba45ec75e87bc04c988c55fdfa91433, type: 3}
---- !u!224 &5481591628336033578 stripped
+--- !u!114 &6701618888303212275 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5335516438481116346, guid: 5ba45ec75e87bc04c988c55fdfa91433, type: 3}
+  m_PrefabInstance: {fileID: 1660527754215483977}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 569febe84eb04c33a8f29496b4b93f63, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!224 &7332153502224780354 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8271542355347006987, guid: 5ba45ec75e87bc04c988c55fdfa91433, type: 3}
-  m_PrefabInstance: {fileID: 4528630531578333473}
+  m_PrefabInstance: {fileID: 1660527754215483977}
   m_PrefabAsset: {fileID: 0}
---- !u!1001 &6103407542945804227
+--- !u!1001 &3615574910493247031
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -295,15 +329,34 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1996372790418805529, guid: 70d694884bc0ed54380ae8b443463c22, type: 3}
       propertyPath: m_Name
-      value: Health
+      value: Enemies
+      objectReference: {fileID: 0}
+    - target: {fileID: 4957847145402566440, guid: 70d694884bc0ed54380ae8b443463c22, type: 3}
+      propertyPath: m_text
+      value: 'Enemies Count: 1000'
+      objectReference: {fileID: 0}
+    - target: {fileID: 4957847145402566440, guid: 70d694884bc0ed54380ae8b443463c22, type: 3}
+      propertyPath: m_margin.x
+      value: -349.39148
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 70d694884bc0ed54380ae8b443463c22, type: 3}
---- !u!224 &5915518487156255670 stripped
+--- !u!224 &3784877823488868930 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 480632173709034613, guid: 70d694884bc0ed54380ae8b443463c22, type: 3}
-  m_PrefabInstance: {fileID: 6103407542945804227}
+  m_PrefabInstance: {fileID: 3615574910493247031}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &5211246453022585685 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8826786097396659554, guid: 70d694884bc0ed54380ae8b443463c22, type: 3}
+  m_PrefabInstance: {fileID: 3615574910493247031}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 357d32a60fec4da390c4d19740c54728, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

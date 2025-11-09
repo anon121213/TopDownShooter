@@ -11,24 +11,11 @@ namespace _Scripts.Gameplay.Projectiles
   {
     [SerializeField] private Rigidbody _rb;
 
-    private float _damage;
-    private float _speed;
-    private float _radius;
-    private float _delay;
     private IDisposable _disposable;
     private INetworkDamageService _damageService;
     private readonly Collider[] _results = new Collider[128];
 
     public override event Action<Projectile> OnReturnToPool;
-
-    public override void Construct(ProjectileData projectileData, INetworkDamageService damageService)
-    {
-      _damage = projectileData.Damage;
-      _speed = projectileData.Speed;
-      _radius = projectileData.ExplosionRadius;
-      _delay = projectileData.ExplosionDelay;
-      _damageService = damageService;
-    }
 
     public override void Initialize()
     {
@@ -37,8 +24,8 @@ namespace _Scripts.Gameplay.Projectiles
       
       _disposable?.Dispose();
       var throwDirection = transform.forward;
-      _rb.AddForce(throwDirection * _speed, ForceMode.Impulse);
-      _disposable = Observable.Timer(TimeSpan.FromSeconds(_delay))
+      _rb.AddForce(throwDirection * ProjectileData.Speed, ForceMode.Impulse);
+      _disposable = Observable.Timer(TimeSpan.FromSeconds(ProjectileData.ExplosionDelay))
         .Subscribe(_ => TakeDamage()).AddTo(this);
     }
 
@@ -47,11 +34,11 @@ namespace _Scripts.Gameplay.Projectiles
       if (!IsServerStarted)
         return;
         
-      int count = Physics.OverlapSphereNonAlloc(transform.position, _radius, _results);
+      int count = Physics.OverlapSphereNonAlloc(transform.position, ProjectileData.ExplosionRadius, _results);
 
       for (int i = 0; i < count; i++)
         if (_results[i].TryGetComponent(out IDamageable damageable))
-          _damageService.SendDamageToEnemy(new DamageData(damageable.ActorNumber.Value, _damage));
+          _damageService.SendDamageToEnemy(new DamageData(damageable.ActorNumber.Value, ProjectileData.Damage));
 
       OnReturnToPool?.Invoke(this);
     }

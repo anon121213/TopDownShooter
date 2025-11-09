@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using _Scripts.Gameplay.Enemies;
 using _Scripts.Gameplay.Player;
 using _Scripts.Infrastructure.Debuging;
 using _Scripts.Infrastructure.Scopes.NetCore.Data;
-using FishNet.Connection;
+using _Scripts.Infrastructure.Services.Network;
 using FishNet.Object;
 using FishNet.Transporting;
 using UniRx;
@@ -46,7 +45,7 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
 
     public IReadOnlyReactiveDictionary<int, IPlayerModel> PlayersRoot => _playersRoot;
     public IReadOnlyReactiveDictionary<int, IMobModel> MobsRoot => _mobsRoot;
-
+    
     public override void OnStartNetwork() => 
       NetworkRoomModelRegistry.Register(this);
 
@@ -211,21 +210,22 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
       RpcRemoveMob(actorNumber);
     }
 
+    
+    //-------------------PROJECTILES-------------------//
+    
+    
     public void AddProjectileDto(ProjectileDataDTO projectileDataDto)
     {
-      if (!_projectileDataDto.TryAdd(projectileDataDto.ActorNumber, projectileDataDto))
-      {
-        Debug.LogError($"[ROOM] DUPLICATE PROJECTILE: Actor={projectileDataDto.ActorNumber}");
-        return;
-      }
-
       if (IsServerStarted)
       {
-        foreach (var conn in ServerManager.Clients.Values)
-          TargetAddDtoProjectile(conn, projectileDataDto.ActorNumber, projectileDataDto);
+        var actorNumber = ActorNumberAllocator.GetProjectileActorNumber(this);
+        var dto = projectileDataDto.CloneAndSetActorNumber(actorNumber);
+        _projectileDataDto[actorNumber] = dto;
+        RpcAddDtoProjectile(actorNumber, dto);
         return;
       }
-      CmdAddDtoProjectile(projectileDataDto.ActorNumber, projectileDataDto, ClientId.Value);
+      
+      CmdAddDtoProjectile(projectileDataDto);
     }
 
     public void RemoveProjectileDto(int actorNumber)
@@ -238,12 +238,11 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
 
       if (IsServerStarted)
       {
-        foreach (var conn in ServerManager.Clients.Values)
-          TargetRemoveDtoProjectile(conn, actorNumber);
+        RpcRemoveDtoProjectile(actorNumber);
         return;
       }
       
-      CmdRemoveDtoProjectile(actorNumber, ClientId.Value);
+      CmdRemoveDtoProjectile(actorNumber);
     }
 
     public void SetIsMobSpawnStarted(bool v)
@@ -253,28 +252,29 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
       RpcSetIsMobSpawnStarted(v);
     }
 
-
+    
     // ---------------- RPC SYNC ----------------
 
-    [ObserversRpc] private void RpcSetConnectionState(LocalConnectionState v) => _connectionState.Value = v;
-
-    [ObserversRpc] private void RpcAddClient(int id) => _clients.Add(id);
-    [ObserversRpc] private void RpcRemoveClient(int id) => _clients.Remove(id);
-
-    [ObserversRpc] private void RpcAddDtoPlayer(int id, PlayerModelDTO dto) => _playersDto[id] = dto;
-    [ObserversRpc] private void RpcRemoveDtoPlayer(int id) => _playersDto.Remove(id);
     
-    [ObserversRpc] private void RpcAddDtoMob(int id, MobModelDataDTO dto) => _mobsDto[id] = dto;
-    [ObserversRpc] private void RpcRemoveDtoMob(int id) => _mobsDto.Remove(id);
+    [ObserversRpc(ExcludeServer = true)] private void RpcSetConnectionState(LocalConnectionState v) => _connectionState.Value = v;
 
-    [ObserversRpc] private void RpcRemovePlayer(int id)
+    [ObserversRpc(ExcludeServer = true)] private void RpcAddClient(int id) => _clients.Add(id);
+    [ObserversRpc(ExcludeServer = true)] private void RpcRemoveClient(int id) => _clients.Remove(id);
+
+    [ObserversRpc(ExcludeServer = true)] private void RpcAddDtoPlayer(int id, PlayerModelDTO dto) => _playersDto.Add(id, dto);
+    [ObserversRpc(ExcludeServer = true)] private void RpcRemoveDtoPlayer(int id) => _playersDto.Remove(id);
+    
+    [ObserversRpc(ExcludeServer = true)] private void RpcAddDtoMob(int id, MobModelDataDTO dto) => _mobsDto.Add(id, dto);
+    [ObserversRpc(ExcludeServer = true)] private void RpcRemoveDtoMob(int id) => _mobsDto.Remove(id);
+
+    [ObserversRpc(ExcludeServer = true)] private void RpcRemovePlayer(int id)
     {
       _players.Remove(id);
       _playersRoot.Remove(id);
       _playersDto.Remove(id);
     }
 
-    [ObserversRpc] private void RpcRemoveMob(int id)
+    [ObserversRpc(ExcludeServer = true)] private void RpcRemoveMob(int id)
     {
       _mobs.Remove(id);
       _mobsRoot.Remove(id);
@@ -282,33 +282,24 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
 
     [ObserversRpc] private void RpcSetIsMobSpawnStarted(bool v) => _isMobSpawnStarted.Value = v;
     
-    [TargetRpc]
-    private void TargetAddDtoProjectile(NetworkConnection conn, int id, ProjectileDataDTO dto)
+    [ObserversRpc] private void RpcAddDtoProjectile(int id, ProjectileDataDTO dto)
     {
       if (IsServerStarted) return;
       _projectileDataDto[id] = dto;
     }
 
-    [TargetRpc]
-    private void TargetRemoveDtoProjectile(NetworkConnection conn, int id)
+    [ObserversRpc] private void RpcRemoveDtoProjectile(int id)
     {
       if (IsServerStarted) return;
       _projectileDataDto.Remove(id);
     }
 
-    [ServerRpc(RequireOwnership = false)] private void CmdAddDtoProjectile(int id, ProjectileDataDTO dto, int clientFrom)
-    {
-      _projectileDataDto[id] = dto;
-      
-      foreach (var conn in ServerManager.Clients.Values.Where(conn => conn.ClientId != clientFrom))
-        TargetAddDtoProjectile(conn, id, dto);
-    }
+    [ServerRpc(RequireOwnership = false)] private void CmdAddDtoProjectile(ProjectileDataDTO dto) => AddProjectileDto(dto);
 
-    [ServerRpc(RequireOwnership = false)] private void CmdRemoveDtoProjectile(int id, int clientFrom)
+    [ServerRpc(RequireOwnership = false)] private void CmdRemoveDtoProjectile(int id)
     {
       _projectileDataDto.Remove(id);
-      foreach (var conn in ServerManager.Clients.Values.Where(conn => conn.ClientId != clientFrom)) 
-        TargetRemoveDtoProjectile(conn, id);
+      RpcRemoveDtoProjectile(id);
     }
   }
   

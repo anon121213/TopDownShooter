@@ -77,6 +77,9 @@ namespace _Scripts.Gameplay.Enemies
           if (!isDead || !_networkRoomModel.IsServer.Value)
             return;
 
+          _networkManager.ServerManager.Despawn(_enemy);
+          _enemyFactory.ReturnEnemy(_enemy.MobModel.MobType.Value, _enemy);
+          
           _networkRoomModel.RemoveMob(_enemy.MobModel.ActorNumber.Value);
           _networkRoomModel.RemoveDtoMob(_enemy.MobModel.ActorNumber.Value);
         }).AddTo(_disposables);

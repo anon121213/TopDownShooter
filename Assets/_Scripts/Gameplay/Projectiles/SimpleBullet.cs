@@ -9,22 +9,15 @@ namespace _Scripts.Gameplay.Projectiles
 {
   public class SimpleBullet : Projectile
   {
-    private float _damage;
-    private float _speed;
     private bool _isCollided;
-    
     private float _lifeTime;
     private const float MAX_LIFETIME = 5f;
 
-    private INetworkDamageService _networkDamageService;
-    
     public override event Action<Projectile> OnReturnToPool;
 
     public override void Construct(ProjectileData projectileData, INetworkDamageService damageService)
     {
-      _damage = projectileData.Damage;
-      _speed = projectileData.Speed;
-      _networkDamageService = damageService;
+      base.Construct(projectileData, damageService);
       _lifeTime = MAX_LIFETIME;
     }
 
@@ -36,7 +29,7 @@ namespace _Scripts.Gameplay.Projectiles
       if (_isCollided || !IsServerStarted)
         return;
 
-      transform.position += transform.forward * (_speed * Time.deltaTime);
+      transform.position += transform.forward * (ProjectileData.Speed * Time.deltaTime);
       
       _lifeTime -= Time.deltaTime;
       if (_lifeTime <= 0f) 
@@ -49,7 +42,7 @@ namespace _Scripts.Gameplay.Projectiles
         return;
       
       if (other.TryGetComponent(out IDamageable damageable))
-        _networkDamageService.SendDamageToEnemy(new DamageData(damageable.ActorNumber.Value, _damage));
+        DamageService.SendDamageToEnemy(new DamageData(damageable.ActorNumber.Value, ProjectileData.Damage));
 
       OnReturnToPool?.Invoke(this);
       _isCollided = true;
@@ -59,10 +52,18 @@ namespace _Scripts.Gameplay.Projectiles
   public abstract class Projectile : NetworkBehaviour
   {
     public int ActorNumber { get; private set; }
+    public ProjectileData ProjectileData { get; private set; }
+    protected INetworkDamageService DamageService { get; private set; }
 
     public abstract void Initialize();
     public abstract event Action<Projectile> OnReturnToPool;
-    public abstract void Construct(ProjectileData projectileData, INetworkDamageService networkDamageService);
+
+    public virtual void Construct(ProjectileData projectileData, INetworkDamageService networkDamageService)
+    {
+      ProjectileData = projectileData;
+      DamageService = networkDamageService;
+    }
+
     public void SetActorNumber(int actorNumber) => ActorNumber = actorNumber;
   }
 }

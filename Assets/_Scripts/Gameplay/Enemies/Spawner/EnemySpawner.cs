@@ -16,18 +16,16 @@ namespace _Scripts.Gameplay.Enemies.Spawner
     private readonly IObjectPool _pool;
     private readonly IStaticDataProvider _staticDataProvider;
     private readonly INetworkRoomModel _roomModel;
-    private readonly IActorNumberAllocator _actorNumberAllocator;
     private readonly CompositeDisposable _disposables = new();
 
     private EnemiesConfig _enemiesConfig;
     
     public EnemySpawner(IObjectPool pool, IStaticDataProvider staticDataProvider, 
-      NetworkRoomModel roomModel, IActorNumberAllocator actorNumberAllocator)
+      INetworkRoomModel roomModel)
     {
       _pool = pool;
       _staticDataProvider = staticDataProvider;
       _roomModel = roomModel;
-      _actorNumberAllocator = actorNumberAllocator;
     }
 
     public void Initialize() => 
@@ -44,7 +42,7 @@ namespace _Scripts.Gameplay.Enemies.Spawner
         return;
       }
 
-      int actorNumber = _actorNumberAllocator.GetMobActorNumber();
+      int actorNumber = ActorNumberAllocator.GetMobActorNumber(_roomModel);
       _roomModel.AddDtoMob(new MobModelDataDTO(actorNumber, enemyType, config.BehaviourType, spawnPoint, startHealth));
     }
 

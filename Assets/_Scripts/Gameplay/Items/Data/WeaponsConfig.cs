@@ -7,8 +7,8 @@ using UnityEngine;
 
 namespace _Scripts.Gameplay.Items.Data
 {
-  [CreateAssetMenu(menuName = "Data/Configs/Items/AllWeaponsConfig", fileName = "AllWeaponsConfig")]
-  public class AllWeaponsConfig : ScriptableObject
+  [CreateAssetMenu(menuName = "Data/Configs/Items/WeaponsConfig", fileName = "WeaponsConfig")]
+  public class WeaponsConfig : ScriptableObject
   {
     [SerializeField] private List<WeaponData> _weapons;
 

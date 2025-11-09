@@ -1,4 +1,5 @@
 ﻿using System;
+using _Scripts.Gameplay.Hud;
 using _Scripts.Gameplay.Player.Data;
 using _Scripts.Gameplay.Player.Services.Base;
 using _Scripts.Gameplay.Player.Spawner;
@@ -7,6 +8,8 @@ using _Scripts.Infrastructure.Scopes.NetCore;
 using _Scripts.Infrastructure.Services.Data.DataProvider;
 using UniRx;
 using UnityEngine;
+using VContainer;
+using VContainer.Unity;
 using IInitializable = VContainer.Unity.IInitializable;
 
 namespace _Scripts.Gameplay.Player
@@ -21,6 +24,7 @@ namespace _Scripts.Gameplay.Player
     private readonly IArenaSceneModel _arenaSceneModel;
     private readonly LocalPlayerScope _localPlayerScope;
     private readonly NetworkPlayerView _networkPlayer;
+    private readonly IObjectResolver _resolver;
     private readonly CompositeDisposable _disposables = new();
 
     private LocalPlayerView _localPlayer;
@@ -28,7 +32,7 @@ namespace _Scripts.Gameplay.Player
     public LocalPlayerEntryPoint(IPlayerServices services, INetworkRoomModel networkRoomModel,
       IStaticDataProvider staticDataProvider, IPlayerFactory playerFactory,
       IPlayerServices playerServices, IArenaSceneModel arenaSceneModel,
-      LocalPlayerScope localPlayerScope, NetworkPlayerView networkPlayer)
+      LocalPlayerScope localPlayerScope, NetworkPlayerView networkPlayer, IObjectResolver resolver)
     {
       _services = services;
       _networkRoomModel = networkRoomModel;
@@ -38,12 +42,16 @@ namespace _Scripts.Gameplay.Player
       _arenaSceneModel = arenaSceneModel;
       _localPlayerScope = localPlayerScope;
       _networkPlayer = networkPlayer;
+      _resolver = resolver;
     }
 
     public void Initialize()
     {
       _localPlayer = _playerFactory.CreateLocalPlayer(Vector3.zero, Quaternion.identity, _networkPlayer.transform);
 
+      var hudConfig = _staticDataProvider.GetConfig<HudConfig>();
+      _resolver.Instantiate(hudConfig.HudPrefab);
+      
       var config = _staticDataProvider.GetConfig<PlayerConfig>();
       _networkPlayer.PlayerModel.SetConfig(config);
       

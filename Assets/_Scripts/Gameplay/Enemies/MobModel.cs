@@ -1,4 +1,5 @@
-﻿using _Scripts.Infrastructure.Debuging;
+﻿using _Scripts.Gameplay.Enemies.Data;
+using _Scripts.Infrastructure.Debuging;
 using _Scripts.Infrastructure.Extensions;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;

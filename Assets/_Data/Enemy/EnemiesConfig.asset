@@ -16,7 +16,20 @@ MonoBehaviour:
   - <Prefab>k__BackingField: {fileID: 9000335725790477587, guid: 55ca948b9ef780743bb8e7e0480e716c, type: 3}
     <MobType>k__BackingField: 1
     <BehaviourType>k__BackingField: 1
-    <Speed>k__BackingField: 3
+    <Speed>k__BackingField: 2
+    <Damage>k__BackingField: 10
+    <AttackRadius>k__BackingField: 1.5
+    <AttackDelay>k__BackingField: 1
+    <MaxComboCount>k__BackingField: 1
+    <StartHealth>k__BackingField: 100
+    <Acceleration>k__BackingField: 300
+    <AngularSpeed>k__BackingField: 360
+    <StoppingDistance>k__BackingField: 1.2
+    <DestroyBeforeDeathDelay>k__BackingField: 0
+  - <Prefab>k__BackingField: {fileID: 9000335725790477587, guid: 9aba3e1c598f9f84bb28a0b448b036e9, type: 3}
+    <MobType>k__BackingField: 2
+    <BehaviourType>k__BackingField: 1
+    <Speed>k__BackingField: 1
     <Damage>k__BackingField: 10
     <AttackRadius>k__BackingField: 1.5
     <AttackDelay>k__BackingField: 1

@@ -1,5 +1,6 @@
 ﻿using _Scripts.Gameplay.Enemies.Factory;
 using _Scripts.Gameplay.Enemies.Spawner;
+using _Scripts.Gameplay.Hud.Ping;
 using _Scripts.Gameplay.Player.Spawner;
 using _Scripts.Gameplay.Projectiles.Factory;
 using _Scripts.Gameplay.Projectiles.Spawner;
@@ -17,12 +18,12 @@ namespace _Scripts.Infrastructure.Scopes.Game
     {
       builder.Register<EnemyFactory>(Lifetime.Singleton).AsImplementedInterfaces();
       builder.Register<NetworkDamageService>(Lifetime.Singleton).AsImplementedInterfaces();
-      builder.Register<ActorNumberAllocator>(Lifetime.Singleton).AsImplementedInterfaces();
       builder.Register<SceneLoader>(Lifetime.Singleton).AsImplementedInterfaces();
       builder.Register<PlayerSpawner>(Lifetime.Singleton).AsImplementedInterfaces();
       builder.Register<EnemySpawner>(Lifetime.Singleton).AsImplementedInterfaces();
       builder.Register<ProjectileFactory>(Lifetime.Singleton).AsImplementedInterfaces();
       builder.Register<ProjectileSpawner>(Lifetime.Singleton).AsImplementedInterfaces();
+      builder.Register<PingModel>(Lifetime.Singleton).AsImplementedInterfaces();
       
       builder.Register<IWarmupService, WarmupService>(Lifetime.Singleton);
       builder.RegisterEntryPoint<GameService>();

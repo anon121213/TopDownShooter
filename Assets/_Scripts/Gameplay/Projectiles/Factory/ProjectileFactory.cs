@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
+﻿using System.Threading;
 using _Scripts.Gameplay.Projectiles.Data;
 using _Scripts.Infrastructure.Scopes.NetCore.Data;
 using _Scripts.Infrastructure.Services.Data.DataProvider;
@@ -9,6 +7,7 @@ using _Scripts.Infrastructure.Services.Pool;
 using _Scripts.Infrastructure.Services.Warmup;
 using Cysharp.Threading.Tasks;
 using FishNet.Managing;
+using FishNet.Object;
 using UnityEngine;
 using VContainer.Unity;
 
@@ -16,7 +15,6 @@ namespace _Scripts.Gameplay.Projectiles.Factory
 {
   public class ProjectileFactory : IProjectileFactory, IInitializable, IWarmupable
   {
-    private readonly Dictionary<int, Projectile> _projectiles = new();
     private readonly IObjectPool _objectPool;
     private readonly NetworkManager _networkManager;
     private readonly INetworkDamageService _networkDamageService;
@@ -52,25 +50,17 @@ namespace _Scripts.Gameplay.Projectiles.Factory
       
       var projectile = _objectPool.GetGameObject(projectileData.Prefab, projectileDataDto.Position, Quaternion.Euler(projectileDataDto.Rotation));
       _networkManager.ServerManager.Spawn(projectile.gameObject);
-      _projectiles.Add(projectileDataDto.ActorNumber, projectile);
       projectile.SetActorNumber(projectileDataDto.ActorNumber);
       projectile.Construct(projectileData, _networkDamageService);
       projectile.Initialize();
       return projectile;
     }
 
-    public void ReturnToPool(int actorNumber, ProjectileTypeEnum type)
+    public void ReturnToPool(Projectile projectile)
     {
-      if (!_projectiles.TryGetValue(actorNumber, out var projectile))
-      {
-        Debug.LogError($"Projectile with actor number {actorNumber} does not exist!!!");
-        return;
-      }
-
-      _projectileConfig.TryGetProjectile(type, out var projectileData);
+      projectile.NetworkObject.ResetState(true);
       _networkManager.ServerManager.Despawn(projectile.gameObject);
-      _objectPool.ReturnGameObject(projectile.gameObject, projectileData.Prefab.gameObject);
-      _projectiles.Remove(actorNumber);
+      _objectPool.ReturnGameObject(projectile.gameObject, projectile.ProjectileData.Prefab.gameObject);
     }
   }
 }

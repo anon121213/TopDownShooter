@@ -21,7 +21,8 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
     private readonly NetworkRoomModel _networkRoomModelPrefab;
 
     private NetworkRoomModel _networkRoomModel;
-      
+    private IDisposable _disposable;
+    
     public NetworkRoomService(NetworkRoomScope networkScope,
       IStaticDataProvider staticDataProvider,
       NetworkManager networkManager,
@@ -66,7 +67,6 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
 
     private void ConnectToServer()
     {
-      _networkManager.ClientManager.OnClientConnectionState += OnClientConnectionState;
       _networkManager.ClientManager.OnAuthenticated += OnClientOnAuthenticated;
       _networkManager.ClientManager.StartConnection();
     }
@@ -100,16 +100,10 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
         builder.RegisterInstance(_networkRoomModel).AsImplementedInterfaces());
     }
 
-    private void OnClientConnectionState(ClientConnectionStateArgs obj)
-    {
-      if (obj.ConnectionState != LocalConnectionState.Started)
-        return;
-    }
-
     private void OnClientOnAuthenticated()
     {
       _networkManager.ClientManager.OnAuthenticated -= OnClientOnAuthenticated;
-      Observable.EveryUpdate().TakeWhile(_ => _networkRoomModel == null).Subscribe(_ =>
+      _disposable = Observable.EveryUpdate().TakeWhile(_ => _networkRoomModel == null).Subscribe(_ =>
       {
         _networkRoomModel = Object.FindAnyObjectByType<NetworkRoomModel>(FindObjectsInactive.Include);
 
@@ -120,7 +114,6 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
         _networkRoomModel.SetId(_networkManager.ClientManager.Connection.ClientId);
         _networkScope.CreateChildFromPrefab(_gameScope, builder => 
           builder.RegisterInstance(_networkRoomModel).AsImplementedInterfaces());
-        Debug.LogError("asd");
       });
     }
 
@@ -128,7 +121,7 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
     {
       _networkManager.ServerManager.OnServerConnectionState -= OnServerConnectionState;
       _networkManager.ServerManager.OnRemoteConnectionState -= OnRemoteConnectionState;
-      _networkManager.ClientManager.OnClientConnectionState -= OnClientConnectionState;
+      _disposable?.Dispose();
     }
   }
 }
