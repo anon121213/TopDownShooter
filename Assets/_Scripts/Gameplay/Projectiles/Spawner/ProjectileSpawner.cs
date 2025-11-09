@@ -1,47 +1,67 @@
-﻿using System;
-using System.Collections.Generic;
-using _Scripts.Gameplay.Projectiles.Data;
+﻿using _Scripts.Gameplay.Projectiles.Data;
 using _Scripts.Gameplay.Projectiles.Factory;
-using _Scripts.Infrastructure.Services.Pool;
+using _Scripts.Infrastructure.Scopes.NetCore;
+using _Scripts.Infrastructure.Scopes.NetCore.Data;
+using _Scripts.Infrastructure.Services.Network;
+using UniRx;
 using UnityEngine;
+using VContainer.Unity;
 
 namespace _Scripts.Gameplay.Projectiles.Spawner
 {
-  public class ProjectileSpawner : IProjectileSpawner, IDisposable
+  public class ProjectileSpawner : IProjectileSpawner, IInitializable
   {
-    private readonly Dictionary<Projectile, Projectile> _projectiles = new();
-    private readonly IObjectPool _objectPool;
+    private readonly INetworkRoomModel _networkRoomModel;
+    private readonly IActorNumberAllocator _actorNumberAllocator;
     private readonly IProjectileFactory _projectileFactory;
-
-    public ProjectileSpawner(IObjectPool objectPool,
+    private readonly CompositeDisposable _disposables = new();
+    
+    public ProjectileSpawner(INetworkRoomModel networkRoomModel,
+      IActorNumberAllocator actorNumberAllocator,
       IProjectileFactory projectileFactory)
     {
-      _objectPool = objectPool;
+      _networkRoomModel = networkRoomModel;
+      _actorNumberAllocator = actorNumberAllocator;
       _projectileFactory = projectileFactory;
     }
 
-    public Projectile CreateProjectile(Projectile prefab, Vector3 at,
-      Quaternion direction, ProjectileConfig config)
+    public void Initialize()
     {
-      Projectile projectile = _projectileFactory.CreateProjectile(prefab, at, direction);
-      _projectiles.Add(projectile, prefab);
-      projectile.Construct(config);
-      projectile.Initialize();
-      projectile.OnCollide += ReturnToPool;
-      return projectile;
+      if (!_networkRoomModel.IsServer.Value)
+        return;
+      
+      _networkRoomModel.ProjectilesDto
+        .ObserveAdd()
+        .Subscribe(dto =>
+        {
+          Debug.LogError(dto.Key);
+          var projectile = _projectileFactory.CreateProjectile(dto.Value);
+          projectile.OnReturnToPool += DespawnProjectile;
+        })
+        .AddTo(_disposables);
+      
+      _networkRoomModel.ProjectilesDto
+        .ObserveRemove()
+        .Subscribe(dto =>
+          _projectileFactory.ReturnToPool(dto.Value.ActorNumber, dto.Value.ProjectileType))
+        .AddTo(_disposables);
     }
 
-    private void ReturnToPool(Projectile projectile)
+    public void SpawnProjectile(ProjectileTypeEnum projectileType, Vector3 position, Quaternion direction)
     {
-      projectile.OnCollide -= ReturnToPool;
-      _objectPool.ReturnGameObject(projectile.gameObject, _projectiles[projectile].gameObject);
-      _projectiles.Remove(projectile);
+      var actorNumber = _actorNumberAllocator.GetProjectileActorNumber();
+      _networkRoomModel.AddProjectileDto(new ProjectileDataDTO(actorNumber, projectileType, position, direction.eulerAngles));
     }
 
-    public void Dispose()
+    private void DespawnProjectile(Projectile projectile)
     {
-      foreach (var projectile in _projectiles) 
-        projectile.Key.OnCollide -= ReturnToPool;
+      projectile.OnReturnToPool -= DespawnProjectile;
+      _networkRoomModel.RemoveProjectileDto(projectile.ActorNumber);
     }
+  }
+
+  public interface IProjectileSpawner
+  {
+    void SpawnProjectile(ProjectileTypeEnum projectileType, Vector3 position, Quaternion direction);
   }
 }

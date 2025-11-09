@@ -1,6 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using _Scripts.Gameplay.Enemies;
 using _Scripts.Gameplay.Player;
+using _Scripts.Infrastructure.Debuging;
+using _Scripts.Infrastructure.Scopes.NetCore.Data;
+using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Transporting;
 using UniRx;
@@ -23,6 +27,8 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
     private readonly ReactiveDictionary<int, IMobModel> _mobsRoot = new();
     private readonly ReactiveDictionary<int, IReadOnlyMobModel> _mobs = new();
 
+    private readonly ReactiveDictionary<int, ProjectileDataDTO> _projectileDataDto = new();
+    
     private readonly ReactiveProperty<bool> _isMobSpawnStarted = new();
 
     // READ-ONLY EXPOSE
@@ -34,12 +40,18 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
 
     public IReadOnlyReactiveDictionary<int, PlayerModelDTO> PlayersDto => _playersDto;
     public IReadOnlyReactiveDictionary<int, MobModelDataDTO> MobsDto => _mobsDto;
+    public IReadOnlyReactiveDictionary<int, ProjectileDataDTO> ProjectilesDto => _projectileDataDto;
     public IReadOnlyReactiveDictionary<int, IReadOnlyPlayerModel> Players => _players;
     public IReadOnlyReactiveDictionary<int, IReadOnlyMobModel> Mobs => _mobs;
 
     public IReadOnlyReactiveDictionary<int, IPlayerModel> PlayersRoot => _playersRoot;
     public IReadOnlyReactiveDictionary<int, IMobModel> MobsRoot => _mobsRoot;
 
+    public override void OnStartNetwork() => 
+      NetworkRoomModelRegistry.Register(this);
+
+    public override void OnStopNetwork() => 
+      NetworkRoomModelRegistry.Unregister(this);
 
     // ---------------- SERVER WRITE API ----------------
 
@@ -167,7 +179,7 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
       if (!_mobsDto.Remove(actorNumber))
         Debug.LogError($"[ROOM] REMOVE DTO FAILED: Actor={actorNumber}");
 
-      RpcRemoveDtoPlayer(actorNumber);
+      RpcRemoveDtoMob(actorNumber);
     }
 
     // INVOKES ONLY LOCAL
@@ -197,6 +209,41 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
         Debug.LogError($"[ROOM] REMOVE MOB FAILED: Actor={actorNumber}");
 
       RpcRemoveMob(actorNumber);
+    }
+
+    public void AddProjectileDto(ProjectileDataDTO projectileDataDto)
+    {
+      if (!_projectileDataDto.TryAdd(projectileDataDto.ActorNumber, projectileDataDto))
+      {
+        Debug.LogError($"[ROOM] DUPLICATE PROJECTILE: Actor={projectileDataDto.ActorNumber}");
+        return;
+      }
+
+      if (IsServerStarted)
+      {
+        foreach (var conn in ServerManager.Clients.Values)
+          TargetAddDtoProjectile(conn, projectileDataDto.ActorNumber, projectileDataDto);
+        return;
+      }
+      CmdAddDtoProjectile(projectileDataDto.ActorNumber, projectileDataDto, ClientId.Value);
+    }
+
+    public void RemoveProjectileDto(int actorNumber)
+    {
+      if (!_projectileDataDto.Remove(actorNumber))
+      {
+        Debug.LogError($"[ROOM] REMOVE DTO FAILED: Actor={actorNumber}");
+        return;
+      }
+
+      if (IsServerStarted)
+      {
+        foreach (var conn in ServerManager.Clients.Values)
+          TargetRemoveDtoProjectile(conn, actorNumber);
+        return;
+      }
+      
+      CmdRemoveDtoProjectile(actorNumber, ClientId.Value);
     }
 
     public void SetIsMobSpawnStarted(bool v)
@@ -234,6 +281,35 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
     }
 
     [ObserversRpc] private void RpcSetIsMobSpawnStarted(bool v) => _isMobSpawnStarted.Value = v;
+    
+    [TargetRpc]
+    private void TargetAddDtoProjectile(NetworkConnection conn, int id, ProjectileDataDTO dto)
+    {
+      if (IsServerStarted) return;
+      _projectileDataDto[id] = dto;
+    }
+
+    [TargetRpc]
+    private void TargetRemoveDtoProjectile(NetworkConnection conn, int id)
+    {
+      if (IsServerStarted) return;
+      _projectileDataDto.Remove(id);
+    }
+
+    [ServerRpc(RequireOwnership = false)] private void CmdAddDtoProjectile(int id, ProjectileDataDTO dto, int clientFrom)
+    {
+      _projectileDataDto[id] = dto;
+      
+      foreach (var conn in ServerManager.Clients.Values.Where(conn => conn.ClientId != clientFrom))
+        TargetAddDtoProjectile(conn, id, dto);
+    }
+
+    [ServerRpc(RequireOwnership = false)] private void CmdRemoveDtoProjectile(int id, int clientFrom)
+    {
+      _projectileDataDto.Remove(id);
+      foreach (var conn in ServerManager.Clients.Values.Where(conn => conn.ClientId != clientFrom)) 
+        TargetRemoveDtoProjectile(conn, id);
+    }
   }
   
   public interface INetworkRoomModel : IReadOnlyNetworkRoomModel
@@ -253,6 +329,9 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
     void AddMobLocal(IMobModel model);
     void RemoveDtoMob(int actorNumber);
     void RemoveMob(int actorNumber);
+
+    void AddProjectileDto(ProjectileDataDTO projectileDataDto);
+    void RemoveProjectileDto(int actorNumber);
     
     void SetIsMobSpawnStarted(bool isMobSpawnStarted);
   }
@@ -267,6 +346,7 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
 
     IReadOnlyReactiveDictionary<int, PlayerModelDTO> PlayersDto { get; }
     IReadOnlyReactiveDictionary<int, MobModelDataDTO> MobsDto { get; }
+    IReadOnlyReactiveDictionary<int, ProjectileDataDTO> ProjectilesDto { get; }
     
     IReadOnlyReactiveDictionary<int, IReadOnlyPlayerModel> Players { get; }
     IReadOnlyReactiveDictionary<int, IReadOnlyMobModel> Mobs { get; }

@@ -35,10 +35,8 @@ namespace _Scripts.Infrastructure.Scopes
       // FACTORIES
       builder.Register<IEnemyAiFactory, EnemyAiFactory>(Lifetime.Singleton);
       builder.Register<ICollectableFactory, CollectableFactory>(Lifetime.Singleton).As<IWarmupable>();
-      builder.Register<IProjectileFactory, ProjectileFactory>(Lifetime.Singleton);
       
       // SPAWNERS 
-      builder.Register<IProjectileSpawner, ProjectileSpawner>(Lifetime.Singleton);
       builder.Register<ICollectableSpawner, CollectableSpawner>(Lifetime.Singleton);
       
       builder.RegisterEntryPoint<MainBootstrapper>().WithParameter(_networkRoomScope);

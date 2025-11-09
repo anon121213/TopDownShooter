@@ -95,8 +95,11 @@ namespace _Scripts.Gameplay.Enemies.Spawner
       if (!_networkRoomModel.IsServer.Value)
         return;
 
-      foreach (var mob in _networkRoomModel.Mobs.ToList()) 
+      foreach (var mob in _networkRoomModel.Mobs.ToList())
+      {
         _networkRoomModel.RemoveMob(mob.Value.ActorNumber.Value);      
+        _networkRoomModel.RemoveDtoMob(mob.Value.ActorNumber.Value);
+      }
     }
 
     private void StartSpawn()

@@ -7,7 +7,7 @@ namespace _Scripts.Infrastructure.Debuging
 {
   public class PlayerModelWindow : EditorWindow
   {
-    [MenuItem("Tools/Gameplay/Player Model Debugger")]
+    [MenuItem("Debug/Gameplay/Player Model Debugger")]
     public static void Open()
     {
       GetWindow<PlayerModelWindow>("Player Model Debugger");

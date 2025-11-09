@@ -6,38 +6,19 @@ namespace _Scripts.Gameplay.Player.Services
 {
   public class PlayerAttackController : PlayerService, IPlayerAttackController
   {
-    private readonly IPlayerMover _playerMover;
     private readonly IPlayerAttacker _playerAttacker;
-    private readonly SerialDisposable _attackDisposable = new();
 
-    public PlayerAttackController(IPlayerMover playerMover,
-      IPlayerAttacker playerAttacker)
+    public PlayerAttackController(IPlayerAttacker playerAttacker)
     {
-      _playerMover = playerMover;
       _playerAttacker = playerAttacker;
     }
-    
-    public override void OnUpdate() => 
-      Attack(_playerMover.IsMoving.Value);
 
-    private void Attack(bool isMoving)
+    public override void OnInitialize()
     {
-      if (_playerAttacker.CurrentWeapon.Value == null)
-        return;
-      
-      if (isMoving)
-      {
-        _attackDisposable?.Dispose();
-        return;
-      }
-
-      _attackDisposable.Disposable = Observable.Interval(TimeSpan.FromSeconds(
-          _playerAttacker.CurrentWeapon.Value.ItemData.ReloadDelay))
-        .Subscribe(_ => _playerAttacker.TryAttack()); 
+      Observable.Interval(TimeSpan.FromSeconds(
+          _playerAttacker.CurrentWeapon.Value.WeaponData.ReloadDelay))
+        .Subscribe(_ => _playerAttacker.TryAttack()).AddTo(Disposables);
     }
-
-    public override void OnDispose() => 
-      _attackDisposable?.Dispose();
   }
 
   public interface IPlayerAttackController

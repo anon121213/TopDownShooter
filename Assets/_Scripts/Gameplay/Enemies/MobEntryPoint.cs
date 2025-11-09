@@ -57,6 +57,7 @@ namespace _Scripts.Gameplay.Enemies
       _enemy.MobModel.Apply(_modelDataDto);
       _enemy.SetContext(new Context(config));
 
+      _networkRoomModel.AddMobLocal(_enemy.MobModel);
       _arenaSceneModel.AddMob(_enemy);
       _arenaSceneModel.AddMobScope(_enemy.MobModel.ActorNumber.Value, _localMobScope);
 
@@ -77,6 +78,7 @@ namespace _Scripts.Gameplay.Enemies
             return;
 
           _networkRoomModel.RemoveMob(_enemy.MobModel.ActorNumber.Value);
+          _networkRoomModel.RemoveDtoMob(_enemy.MobModel.ActorNumber.Value);
         }).AddTo(_disposables);
 
       _enemy.IsEnabled

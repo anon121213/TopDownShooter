@@ -85,7 +85,7 @@ namespace _Scripts.Infrastructure.Scopes.ArenaScene
         .ObserveRemove()
         .Subscribe(client => _playerSpawner.DespawnPlayer(client.Value))
         .AddTo(_disposables);
-      
+     
       _playerSpawner.SpawnPlayer(_networkRoomModel.ClientId.Value);
       
       // --------------ENEMIES--------------
@@ -100,7 +100,7 @@ namespace _Scripts.Infrastructure.Scopes.ArenaScene
 
       _networkRoomModel.MobsDto
         .ObserveRemove()
-        .Subscribe(enemy => _arenaSceneModel.LocalPlayersScopes[enemy.Key].Dispose())
+        .Subscribe(enemy => _arenaSceneModel.MobScopes[enemy.Key].Dispose())
         .AddTo(_disposables);
       
       _enemySpawnerModel.StartSpawnEnemies();
@@ -119,24 +119,11 @@ namespace _Scripts.Infrastructure.Scopes.ArenaScene
     // -----------MOBS------------
     private void CreateMob(MobModelDataDTO dto)
     {
-      if (_networkRoomModel.IsServer.Value)
-      {
-        CreateLocalMob(dto);
+      if (!_networkRoomModel.IsServer.Value)
         return;
-      }
         
-      CreateRemoteMob(dto);
-    }
-    
-    private void CreateLocalMob(MobModelDataDTO dto)
-    {
       _arenaScope.CreateChildFromPrefab(_networkConfig.LocalMobScopePrefab, builder =>
         builder.RegisterInstance(dto));
-    }
-    
-    private void CreateRemoteMob(MobModelDataDTO dto)
-    {
-      Debug.LogError("CreateRemoteMob");
     }
 
     public void Dispose()

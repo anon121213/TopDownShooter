@@ -4,8 +4,11 @@ using _Scripts.Infrastructure.Services.Data.DataProvider;
 using FishNet.Connection;
 using FishNet.Managing;
 using FishNet.Transporting;
+using UniRx;
 using UnityEngine;
+using VContainer;
 using VContainer.Unity;
+using Object = UnityEngine.Object;
 
 namespace _Scripts.Infrastructure.Scopes.NetCore
 {
@@ -15,19 +18,21 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
     private readonly IStaticDataProvider _staticDataProvider;
     private readonly NetworkManager _networkManager;
     private readonly GameScope _gameScope;
-    private readonly INetworkRoomModel _networkRoomModel;
+    private readonly NetworkRoomModel _networkRoomModelPrefab;
+
+    private NetworkRoomModel _networkRoomModel;
       
     public NetworkRoomService(NetworkRoomScope networkScope,
       IStaticDataProvider staticDataProvider,
       NetworkManager networkManager,
       GameScope gameScope,
-      INetworkRoomModel networkRoomModel)
+      NetworkRoomModel networkRoomModelPrefab)
     {
       _networkScope = networkScope;
       _staticDataProvider = staticDataProvider;
       _networkManager = networkManager;
       _gameScope = gameScope;
-      _networkRoomModel = networkRoomModel;
+      _networkRoomModelPrefab = networkRoomModelPrefab;
     }
 
     public void Initialize()
@@ -56,11 +61,13 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
       _networkManager.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
       _networkManager.ServerManager.StartConnection();
       _networkManager.ClientManager.StartConnection();
+
     }
 
     private void ConnectToServer()
     {
       _networkManager.ClientManager.OnClientConnectionState += OnClientConnectionState;
+      _networkManager.ClientManager.OnAuthenticated += OnClientOnAuthenticated;
       _networkManager.ClientManager.StartConnection();
     }
 
@@ -82,25 +89,39 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
     {
       if (obj.ConnectionState != LocalConnectionState.Started) 
         return;
-      
-      _networkRoomModel.SetConnectionState(obj.ConnectionState);
-      _networkManager.ServerManager.Spawn((NetworkRoomModel)_networkRoomModel);
 
+      _networkRoomModel = Object.Instantiate(_networkRoomModelPrefab);
+      _networkManager.ServerManager.Spawn(_networkRoomModel);
+
+      _networkRoomModel.SetConnectionState(obj.ConnectionState);
       _networkRoomModel.SetIsServer(true);
       _networkRoomModel.SetId(0);
-      _networkScope.CreateChildFromPrefab(_gameScope);
+      _networkScope.CreateChildFromPrefab(_gameScope, builder => 
+        builder.RegisterInstance(_networkRoomModel).AsImplementedInterfaces());
     }
 
     private void OnClientConnectionState(ClientConnectionStateArgs obj)
     {
-      _networkRoomModel.SetConnectionState(obj.ConnectionState);
+      if (obj.ConnectionState != LocalConnectionState.Started)
+        return;
+    }
 
-      if (obj.ConnectionState == LocalConnectionState.Started)
+    private void OnClientOnAuthenticated()
+    {
+      _networkManager.ClientManager.OnAuthenticated -= OnClientOnAuthenticated;
+      Observable.EveryUpdate().TakeWhile(_ => _networkRoomModel == null).Subscribe(_ =>
       {
+        _networkRoomModel = Object.FindAnyObjectByType<NetworkRoomModel>(FindObjectsInactive.Include);
+
+        if (!_networkRoomModel)
+          return;
+        
         _networkRoomModel.SetIsServer(false);
         _networkRoomModel.SetId(_networkManager.ClientManager.Connection.ClientId);
-        _networkScope.CreateChildFromPrefab(_gameScope);
-      }
+        _networkScope.CreateChildFromPrefab(_gameScope, builder => 
+          builder.RegisterInstance(_networkRoomModel).AsImplementedInterfaces());
+        Debug.LogError("asd");
+      });
     }
 
     public void Dispose()

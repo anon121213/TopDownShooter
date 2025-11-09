@@ -1,5 +1,6 @@
 ﻿using _Scripts.Gameplay.Enemies.BehaviourTree;
 using _Scripts.Gameplay.Enemies.Data;
+using _Scripts.Gameplay.health;
 using FishNet.Object;
 using UniRx;
 using UnityEngine;
@@ -7,20 +8,23 @@ using UnityEngine.AI;
 
 namespace _Scripts.Gameplay.Enemies.Base
 {
-  public abstract class Enemy : NetworkBehaviour
+  public abstract class Enemy : NetworkBehaviour, IDamageable
   {
     [field: SerializeField] public MobModel MobModel { get; private set; }
     [field: SerializeField] public NavMeshAgent NavMeshAgent { get; private set; }
     protected EnemyAI EnemyAI { get; private set; }
     public EnemyData Config { get; private set; }
 
-    private readonly ReactiveProperty<bool> _isEnabled = new ReactiveProperty<bool>();
-    private readonly ReactiveProperty<bool> _isPooled = new ReactiveProperty<bool>();
+    private readonly ReactiveProperty<bool> _isEnabled = new();
+    private readonly ReactiveProperty<bool> _isPooled = new();
 
     public IReadOnlyReactiveProperty<bool> IsEnabled => _isEnabled;
     public IReadOnlyReactiveProperty<bool> IsPooled => _isPooled;
 
-    public readonly CompositeDisposable ViewDisposables = new CompositeDisposable();
+    protected readonly CompositeDisposable ViewDisposables = new();
+
+    public IReadOnlyReactiveProperty<int> ActorNumber => MobModel.ActorNumber;
+    public IReadOnlyReactiveProperty<bool> IsDead => MobModel.IsDead;
 
     public void SetContext(Context context)
     {
@@ -45,6 +49,7 @@ namespace _Scripts.Gameplay.Enemies.Base
     }
 
     protected virtual void OnSetContext(Context context) { }
+
 
     public virtual void OnGetFromPool()
     {

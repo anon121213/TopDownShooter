@@ -1,36 +1,32 @@
-﻿using Cysharp.Threading.Tasks;
-using _Scripts.Gameplay.health;
-using _Scripts.Gameplay.Projectiles;
-using _Scripts.Gameplay.Projectiles.Data;
+﻿using _Scripts.Gameplay.health;
+using _Scripts.Gameplay.Items.Data;
 using _Scripts.Gameplay.Projectiles.Spawner;
+using _Scripts.Infrastructure.Scopes.NetCore;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 
 namespace _Scripts.Gameplay.Items.Weapons.Attackables
 {
   public class ShootAttacker : IAttackable
   {
     private readonly IProjectileSpawner _projectileSpawner;
-    private readonly Projectile _projectile;
     private readonly Transform _owner;
-    private readonly ShootProjectileConfig _shootProjectileConfig;
+    private readonly WeaponData _weaponData;
+    private readonly IReadOnlyNetworkRoomModel _roomModel;
     private readonly float _findTargetRadius;
     private readonly float _spawnProjectileOffset;
     private readonly Collider[] _results = new Collider[30];
 
     public ShootAttacker(IProjectileSpawner projectileSpawner,
-      Projectile projectile,
       Transform owner,
-      ShootProjectileConfig shootProjectileConfig,
-      float findTargetRadius,
-      float spawnProjectileOffset)
+      WeaponData weaponData,
+      IReadOnlyNetworkRoomModel roomModel)
     {
       _projectileSpawner = projectileSpawner;
-      _projectile = projectile;
       _owner = owner;
-      _shootProjectileConfig = shootProjectileConfig;
-      _findTargetRadius = findTargetRadius;
-      _spawnProjectileOffset = spawnProjectileOffset;
+      _weaponData = weaponData;
+      _roomModel = roomModel;
+      _findTargetRadius = _weaponData.FindTargetRadius;
+      _spawnProjectileOffset = _weaponData.SpawnProjectileOffset;
     }
         
     public void Attack()
@@ -46,30 +42,33 @@ namespace _Scripts.Gameplay.Items.Weapons.Attackables
       {
         if (_results[i] == null || _results[i].transform == _owner) continue;
 
-        if (_results[i].TryGetComponent(out IDamageable damageable))
-        {
-          float distance = Vector3.SqrMagnitude(_results[i].transform.position - _owner.position);
-          if (distance < minDistance)
-          {
-            minDistance = distance;
-            closestTarget = _results[i].transform;
-          }
-        }
+        if (!_results[i].TryGetComponent(out IDamageable damageable))
+          continue;
+
+        if (damageable.IsDead.Value)
+          continue;
+        
+        float distance = Vector3.SqrMagnitude(_results[i].transform.position - _owner.position);
+        if (!(distance < minDistance))
+          continue;
+          
+        minDistance = distance;
+        closestTarget = _results[i].transform;
       }
 
       if (closestTarget == null)
         return;
 
-      Vector3 targetPosition = closestTarget.position;
-      Vector3 direction = (targetPosition - _owner.position).normalized;
+      var targetPosition = closestTarget.position;
+      var direction = (targetPosition - _owner.position).normalized;
 
       if (direction == Vector3.zero)
         direction = _owner.forward;
 
-      Quaternion rotation = Quaternion.LookRotation(direction);
-      Vector3 spawnPosition = _owner.position + direction * _spawnProjectileOffset;
-
-      _projectileSpawner.CreateProjectile(_projectile, spawnPosition, rotation, _shootProjectileConfig);
+      var rotation = Quaternion.LookRotation(direction);
+      var spawnPosition = _owner.position + direction * _spawnProjectileOffset;
+   
+      _projectileSpawner.SpawnProjectile(_weaponData.ProjectileType, spawnPosition, rotation);
     }
   }
 }

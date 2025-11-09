@@ -8,7 +8,7 @@ namespace _Scripts.Infrastructure.Debuging
 {
   public class MobModelWindow : EditorWindow
   {
-    [MenuItem("Tools/Gameplay/Mob Model Debugger")]
+    [MenuItem("Debug/Gameplay/Mob Model Debugger")]
     public static void Open()
     {
       GetWindow<MobModelWindow>("Mob Model Debugger");

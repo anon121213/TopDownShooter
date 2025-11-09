@@ -3,5 +3,6 @@
   public static class NetworkConstants
   {
     public const int MOB_ACTOR_NUMBERS_OFFSET = 1000;
+    public const int PROJECTILE_ACTOR_NUMBERS_OFFSET = 2000;
   }
 }

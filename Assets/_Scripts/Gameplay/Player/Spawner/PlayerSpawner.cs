@@ -1,7 +1,6 @@
 ﻿using _Scripts.Gameplay.Player.Data;
 using _Scripts.Infrastructure.Scopes.NetCore;
 using _Scripts.Infrastructure.Services.Data.DataProvider;
-using UnityEngine;
 using VContainer.Unity;
 
 namespace _Scripts.Gameplay.Player.Spawner

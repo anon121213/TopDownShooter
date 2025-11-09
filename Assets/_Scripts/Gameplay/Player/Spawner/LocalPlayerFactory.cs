@@ -29,8 +29,10 @@ namespace _Scripts.Gameplay.Player.Spawner
       _cameraFactory = cameraFactory;
     }
 
-    public void Initialize() => 
+    public void Initialize()
+    {
       _playerConfig = _staticDataProvider.GetConfig<PlayerConfig>();
+    }
 
     public LocalPlayerView CreateLocalPlayer(Vector3 position, Quaternion rotation, Transform root)
     {

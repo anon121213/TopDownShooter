@@ -2,25 +2,24 @@
 using _Scripts.Gameplay.Items.Base;
 using _Scripts.Gameplay.Items.Data;
 using _Scripts.Gameplay.Items.Weapons.Attackables;
-using Cysharp.Threading.Tasks;
 using UniRx;
-using UnityEngine;
 
 namespace _Scripts.Gameplay.Items.Weapons
 {
   public class Weapon : IWeapon
   {
     private readonly IAttackable _attacker;
-    public ItemData ItemData { get; }
+    public WeaponData WeaponData { get; }
+    public ItemData ItemData => WeaponData.ItemData;
 
     private bool _isReloading;
     private IDisposable _disposable;
 
-    public Weapon(WeaponConfig weaponConfig,
+    public Weapon(WeaponData weaponData,
       IAttackable attacker)
     {
       _attacker = attacker;
-      ItemData = weaponConfig.ItemData;
+      WeaponData = weaponData;
     }
 
     public bool TryAttack()
@@ -38,10 +37,9 @@ namespace _Scripts.Gameplay.Items.Weapons
       _isReloading = true;
       _disposable?.Dispose();
       
-      _disposable = Observable.Timer(TimeSpan.FromSeconds(ItemData.ReloadDelay))
+      _disposable = Observable.Timer(TimeSpan.FromSeconds(WeaponData.ReloadDelay))
         .Subscribe(_ => _isReloading = false);
     }
-
 
     public void Dispose() => 
       _disposable.Dispose();
@@ -49,6 +47,7 @@ namespace _Scripts.Gameplay.Items.Weapons
 
   public interface IWeapon : IItem, IDisposable
   {
+    WeaponData WeaponData { get; }
     bool TryAttack();
   }
 }

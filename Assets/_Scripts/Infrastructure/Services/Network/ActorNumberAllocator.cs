@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using _Scripts.Infrastructure.Scopes.NetCore;
 
 namespace _Scripts.Infrastructure.Services.Network
@@ -22,10 +23,25 @@ namespace _Scripts.Infrastructure.Services.Network
 
       return number;
     }
+    
+    public int GetProjectileActorNumber()
+    {
+      var used = new HashSet<int>();
+      foreach (var projectile in _roomModel.ProjectilesDto) 
+        used.Add(projectile.Value.ActorNumber);
+      
+      int number = NetworkConstants.PROJECTILE_ACTOR_NUMBERS_OFFSET;
+      while (used.Contains(number))
+        number++;
+
+      string strNumber = $"{_roomModel.ClientId.Value}{number}"; // TODO REMOVE GC ALLOC
+      return int.Parse(strNumber);
+    }
   }
 
   public interface IActorNumberAllocator
   {
     int GetMobActorNumber();
+    int GetProjectileActorNumber();
   }
 }
