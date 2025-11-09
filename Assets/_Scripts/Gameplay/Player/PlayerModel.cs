@@ -70,6 +70,7 @@ namespace _Scripts.Gameplay.Player
     {
       _health.Value = Mathf.Clamp(health, 0, int.MaxValue);
       _playerStateDto.With(dto => dto.Health = _health.Value);
+      if (_health.Value == 0) SetIsDead(true);
       RpcSetHealth(_health.Value);
     }
     

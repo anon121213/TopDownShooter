@@ -16,19 +16,19 @@ namespace _Scripts.Gameplay.Enemies.BehaviourTree.Nodes
     public override NodeStatus Execute(Enemy enemy) {
       _moveableEnemy.TargetSetter.TrySetTarget();
             
-      if (!_moveableEnemy.CurrentTarget.Value) {
+      if (!_moveableEnemy.CurrentTarget.Value.TargetRoot) {
         _moveableEnemy.Mover.Stop();
         return NodeStatus.Failure;
       }
             
-      var distanceToTarget = Vector3.Distance(enemy.transform.position, _moveableEnemy.CurrentTarget.Value.position);
+      var distanceToTarget = Vector3.Distance(enemy.transform.position, _moveableEnemy.CurrentTarget.Value.TargetRoot.position);
 
       if (distanceToTarget <= _moveableEnemy.StoppingDistance) {
         _moveableEnemy.Mover.Stop();
         return NodeStatus.Success;
       }
 
-      _moveableEnemy.Mover.Move(_moveableEnemy.CurrentTarget.Value.position);
+      _moveableEnemy.Mover.Move(_moveableEnemy.CurrentTarget.Value.TargetRoot.position);
       return NodeStatus.Running;
     }
 

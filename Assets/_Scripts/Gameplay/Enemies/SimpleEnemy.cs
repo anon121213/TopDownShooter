@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using _Scripts.Gameplay.Enemies.Base;
+﻿using _Scripts.Gameplay.Enemies.Base;
 using _Scripts.Gameplay.Enemies.Data;
 using _Scripts.Gameplay.Enemies.Services;
 using UniRx;
@@ -8,14 +7,14 @@ using VRShooter.Scopes;
 
 namespace _Scripts.Gameplay.Enemies
 {
-  public class SimpleEnemy : Enemy, IChasingEnemy, IAttackableEnemy, IPlayerTargetableEnemy
+  public class SimpleEnemy : Enemy, IChasingEnemy, IAttackableEnemy, IPlayerNetworkTargetableEnemy
   {
     [field: SerializeField] public Transform AttackPoint { get; private set; }
 
-    private readonly ReactiveCollection<Transform> _targets = new ReactiveCollection<Transform>();
-    private readonly ReactiveProperty<Transform> _currentTarget = new ReactiveProperty<Transform>();
-    private readonly ReactiveProperty<bool> _isChasing = new ReactiveProperty<bool>();
-    private readonly ReactiveProperty<bool> _isAttacking = new ReactiveProperty<bool>();
+    private readonly ReactiveDictionary<int, TargetData> _targets = new();
+    private readonly ReactiveProperty<TargetData> _currentTarget = new();
+    private readonly ReactiveProperty<bool> _isChasing = new();
+    private readonly ReactiveProperty<bool> _isAttacking = new();
 
     public float Damage { get; private set; }
     public float AttackRadius { get; private set; }
@@ -30,8 +29,8 @@ namespace _Scripts.Gameplay.Enemies
 
     public IReadOnlyReactiveProperty<bool> IsChasing => _isChasing;
     public IReadOnlyReactiveProperty<bool> IsAttacking => _isAttacking;
-    public IReadOnlyReactiveCollection<Transform> Targets => _targets;
-    public IReadOnlyReactiveProperty<Transform> CurrentTarget => _currentTarget;
+    public IReadOnlyReactiveDictionary<int, TargetData> Targets => _targets;
+    public IReadOnlyReactiveProperty<TargetData> CurrentTarget => _currentTarget;
 
     public void Construct(EnemyData config, IEnemyMover enemyMover, IEnemyAttacker enemyAttacker,
       IEnemyTargetSetter enemyTargetSetter)
@@ -59,31 +58,30 @@ namespace _Scripts.Gameplay.Enemies
       }).AddTo(ViewDisposables);
     }
 
-    public void TryAddTarget(Transform target)
-    {
-      if (!Targets.Contains(target) && target)
-        _targets.Add(target);
-    }
+    public void TryAddTarget(TargetData targetData) => 
+      _targets.Add(targetData.ActorNumber, targetData);
 
-    public void TryRemoveTarget(Transform target)
+    public void TryRemoveTarget(int actorNumber)
     {
-      if (!Targets.Contains(target) && target)
+      if (!_targets.Remove(actorNumber))
         return;
-
-      if (target == _currentTarget.Value)
-      {
-        SetCurrentTarget(null);
-      }
-
-      _targets.Remove(target);
+      
+      if (actorNumber == _currentTarget.Value.ActorNumber) 
+        SetCurrentTarget(-1, null);
     }
 
     public void ResetTargets() =>
       _targets?.Clear();
 
-    public void SetCurrentTarget(Transform target)
+    public void SetCurrentTarget(int actorNumber, Transform target)
     {
-      _currentTarget.Value = target;
+      if (actorNumber == -1)
+      {
+        _currentTarget.Value = new TargetData(-1, null);
+        return;
+      } 
+      
+      _currentTarget.Value = _targets[actorNumber];
 
       if (target)
         return;
@@ -112,7 +110,7 @@ namespace _Scripts.Gameplay.Enemies
     {
       base.OnGetFromPool();
       _targets.Clear();
-      SetCurrentTarget(null);
+      SetCurrentTarget(-1, null);
       _isChasing.Value = false;
     }
 

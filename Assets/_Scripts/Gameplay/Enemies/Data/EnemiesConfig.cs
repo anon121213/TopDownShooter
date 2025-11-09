@@ -40,6 +40,5 @@ namespace _Scripts.Gameplay.Enemies.Data
     [field: SerializeField] public float AngularSpeed { get; private set; }
     [field: SerializeField] public float StoppingDistance { get; private set; }
     [field: SerializeField] public float DestroyBeforeDeathDelay { get; private set; }
-    [field: SerializeField] public LayerMask DamageLayer { get; private set; }
   }
 }

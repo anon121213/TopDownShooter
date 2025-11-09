@@ -4,7 +4,7 @@ using VRShooter.Scopes;
 
 namespace _Scripts.Gameplay.Enemies.Base
 {
-  public interface IAttackableEnemy : ITargetableEnemy{
+  public interface IAttackableEnemy : INetworkTargetableEnemy{
     IEnemyAttacker Attacker { get; }
     IReadOnlyReactiveProperty<bool> IsAttacking { get; }
     float Damage { get; }

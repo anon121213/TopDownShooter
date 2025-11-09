@@ -7,7 +7,7 @@ namespace _Scripts.Infrastructure.Services.Network
   public class NetworkDamageService : INetworkDamageService
   {
     [Inject] private readonly INetworkRoomModel _roomModel;
-
+    
     public void SendDamageToPlayer(DamageData data)
     {
       if (_roomModel.IsServer.Value == false)
@@ -40,7 +40,7 @@ namespace _Scripts.Infrastructure.Services.Network
         player.Value.SetHealth(player.Value.Health.Value - data.Damage);
       }
     }
-    
+
     private void ApplyDamageToMob(DamageData data)
     {
       foreach (var mob in _roomModel.MobsRoot)

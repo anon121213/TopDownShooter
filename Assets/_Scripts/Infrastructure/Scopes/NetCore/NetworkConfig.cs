@@ -11,6 +11,8 @@ namespace _Scripts.Infrastructure.Scopes.NetCore
     [field: SerializeField] public LocalPlayerScope LocalPlayerScopePrefab { get; private set; }
     [field: SerializeField] public RemotePlayerScope RemotePlayerScopePrefab { get; private set; }
     [field: SerializeField] public LocalMobScope LocalMobScopePrefab { get; private set; }
+
+    [field: SerializeField] public float NetworkSendDelayMS { get; private set; }
   }
 
   public enum ConnectType

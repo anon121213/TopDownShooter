@@ -69,7 +69,7 @@ namespace _Scripts.Gameplay.Enemies.Factory
           }
 
           var enemyMover = new EnemyMover(simpleEnemy, config);
-          var enemyAttacker = new EnemyAttacker(simpleEnemy, _damageService, config.DamageLayer);
+          var enemyAttacker = new EnemyAttacker(simpleEnemy, _damageService);
           var enemyTargetSetter = new EnemyTargetSetter(simpleEnemy, simpleEnemy);
 
           simpleEnemy.Construct(config, enemyMover, enemyAttacker, enemyTargetSetter);

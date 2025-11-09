@@ -90,21 +90,21 @@ namespace _Scripts.Gameplay.Enemies
         })
         .AddTo(_disposables);
 
-      if (_enemy is IPlayerTargetableEnemy targetableEnemy)
+      if (_enemy is IPlayerNetworkTargetableEnemy targetableEnemy)
       {
         foreach (var player in _arenaSceneModel.Players)
-          targetableEnemy.TryAddTarget(player.Value.transform);
+          targetableEnemy.TryAddTarget(new TargetData(player.Key, player.Value.transform));
 
         _arenaSceneModel.Players
           .ObserveAdd()
           .Subscribe(player =>
-            targetableEnemy.TryAddTarget(player.Value.transform))
+            targetableEnemy.TryAddTarget(new TargetData(player.Key, player.Value.transform)))
           .AddTo(_disposables);
 
         _arenaSceneModel.Players
           .ObserveRemove()
           .Subscribe(player =>
-            targetableEnemy.TryRemoveTarget(player.Value.transform))
+            targetableEnemy.TryRemoveTarget(player.Key))
           .AddTo(_disposables);
       }
 

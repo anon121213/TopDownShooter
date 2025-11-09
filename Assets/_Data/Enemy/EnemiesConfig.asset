@@ -18,14 +18,11 @@ MonoBehaviour:
     <BehaviourType>k__BackingField: 1
     <Speed>k__BackingField: 3
     <Damage>k__BackingField: 10
-    <AttackRadius>k__BackingField: 1
+    <AttackRadius>k__BackingField: 1.5
     <AttackDelay>k__BackingField: 1
     <MaxComboCount>k__BackingField: 1
     <StartHealth>k__BackingField: 100
     <Acceleration>k__BackingField: 300
     <AngularSpeed>k__BackingField: 360
-    <StoppingDistance>k__BackingField: 0.5
+    <StoppingDistance>k__BackingField: 1.2
     <DestroyBeforeDeathDelay>k__BackingField: 0
-    <DamageLayer>k__BackingField:
-      serializedVersion: 2
-      m_Bits: 8
